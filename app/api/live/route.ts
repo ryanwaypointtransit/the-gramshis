@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, Market, Outcome, User, Position } from "@/lib/db";
+import { sql, Market, Outcome, User, Position } from "@/lib/db";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 
 export const dynamic = "force-dynamic";
@@ -15,22 +15,23 @@ interface LeaderboardEntry {
 
 export async function GET() {
   try {
-    const db = getDb();
-
     // Get all open markets with their outcomes and prices
-    const markets = db
-      .prepare("SELECT * FROM markets WHERE status = 'open' ORDER BY created_at DESC")
-      .all() as Market[];
+    const marketsResult = await sql`
+      SELECT * FROM markets WHERE status = 'open' ORDER BY created_at DESC
+    `;
+    const markets = marketsResult.rows as Market[];
 
-    const marketsWithPrices = markets.map((market) => {
-      const outcomes = db
-        .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-        .all(market.id) as Outcome[];
+    const marketsWithPrices = [];
+    for (const market of markets) {
+      const outcomesResult = await sql`
+        SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
+      `;
+      const outcomes = outcomesResult.rows as Outcome[];
 
-      const shares = outcomes.map((o) => o.shares_outstanding);
-      const prices = calculatePrices(shares, market.liquidity_param);
+      const shares = outcomes.map((o) => Number(o.shares_outstanding));
+      const prices = calculatePrices(shares, Number(market.liquidity_param));
 
-      return {
+      marketsWithPrices.push({
         id: market.id,
         name: market.name,
         outcomes: outcomes.map((o, i) => ({
@@ -38,50 +39,54 @@ export async function GET() {
           name: o.name,
           price: prices[i],
         })),
-      };
-    });
+      });
+    }
 
     // Get leaderboard (top 10 by total portfolio value)
-    const users = db.prepare("SELECT * FROM users ORDER BY balance DESC").all() as User[];
+    const usersResult = await sql`SELECT * FROM users ORDER BY balance DESC`;
+    const users = usersResult.rows as User[];
 
-    const leaderboard: LeaderboardEntry[] = users.map((user) => {
+    const leaderboard: LeaderboardEntry[] = [];
+
+    for (const user of users) {
       // Calculate position values
-      const positions = db
-        .prepare(
-          `SELECT p.*, o.market_id, o.shares_outstanding
-           FROM positions p
-           JOIN outcomes o ON p.outcome_id = o.id
-           WHERE p.user_id = ? AND p.shares > 0`
-        )
-        .all(user.id) as (Position & { market_id: number; shares_outstanding: number })[];
+      const positionsResult = await sql`
+        SELECT p.*, o.market_id, o.shares_outstanding
+        FROM positions p
+        JOIN outcomes o ON p.outcome_id = o.id
+        WHERE p.user_id = ${user.id} AND p.shares > 0
+      `;
+      const positions = positionsResult.rows as (Position & { market_id: number; shares_outstanding: number })[];
 
       let positionValue = 0;
       for (const pos of positions) {
-        const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(pos.market_id) as Market;
+        const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
+        const market = marketResult.rows[0] as Market;
         if (market.status !== "open") continue;
 
-        const outcomes = db
-          .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-          .all(market.id) as Outcome[];
+        const outcomesResult = await sql`
+          SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
+        `;
+        const outcomes = outcomesResult.rows as Outcome[];
 
-        const sharesArray = outcomes.map((o) => o.shares_outstanding);
-        const prices = calculatePrices(sharesArray, market.liquidity_param);
+        const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
+        const prices = calculatePrices(sharesArray, Number(market.liquidity_param));
 
         const outcomeIndex = outcomes.findIndex((o) => o.id === pos.outcome_id);
         if (outcomeIndex !== -1) {
-          positionValue += pos.shares * prices[outcomeIndex];
+          positionValue += Number(pos.shares) * prices[outcomeIndex];
         }
       }
 
-      return {
+      leaderboard.push({
         id: user.id,
         name: user.name,
         displayName: user.display_name,
-        balance: user.balance,
+        balance: Number(user.balance),
         positionValue,
-        totalValue: user.balance + positionValue,
-      };
-    });
+        totalValue: Number(user.balance) + positionValue,
+      });
+    }
 
     // Sort by total value and take top 10
     leaderboard.sort((a, b) => b.totalValue - a.totalValue);

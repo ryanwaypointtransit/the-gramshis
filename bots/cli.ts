@@ -2,11 +2,9 @@
 /**
  * Command Line Interface for the Grammy betting bot system
  * 
- * This script provides a CLI for starting, stopping, and monitoring
- * the bot system.
+ * NOTE: Bot system is currently disabled during Postgres migration.
  */
 
-import path from 'path';
 import { Command } from 'commander';
 
 const program = new Command();
@@ -15,23 +13,21 @@ import { initialize, startSystem, stopSystem, getStatus, shutdown } from './orch
 // Set up CLI commands
 program
   .name('grammybots')
-  .description('Grammy Betting Bot System')
+  .description('Grammy Betting Bot System (currently disabled during Postgres migration)')
   .version('1.0.0');
 
 // Initialize command
 program
   .command('init')
-  .description('Initialize the bot system')
-  .option('-d, --db <path>', 'Path to database file')
-  .action(async (options) => {
-    const dbPath = options.db || path.join(process.cwd(), 'gramshis.db');
-    console.log(`Initializing bot system with database: ${dbPath}`);
+  .description('Initialize the bot system (currently disabled)')
+  .action(async () => {
+    console.log('Initializing bot system...');
     
-    const success = await initialize(dbPath);
+    const success = await initialize();
     if (success) {
       console.log('Bot system initialized successfully');
     } else {
-      console.error('Failed to initialize bot system');
+      console.log('Bot system is currently disabled during Postgres migration');
       process.exit(1);
     }
   });
@@ -39,20 +35,10 @@ program
 // Start command
 program
   .command('start')
-  .description('Start the bot system')
-  .option('-d, --db <path>', 'Path to database file')
-  .option('-p, --period <ms>', 'Period between bets in milliseconds')
-  .action(async (options) => {
-    const dbPath = options.db || path.join(process.cwd(), 'gramshis.db');
-    
-    // Set period if provided
-    if (options.period) {
-      const { BOT_CONFIG } = await import('./config');
-      BOT_CONFIG.PERIOD = parseInt(options.period);
-    }
-    
+  .description('Start the bot system (currently disabled)')
+  .action(async () => {
     // Initialize and start
-    const success = await initialize(dbPath);
+    const success = await initialize();
     if (success) {
       startSystem();
       console.log('Bot system started');
@@ -67,7 +53,7 @@ program
         process.exit(0);
       });
     } else {
-      console.error('Failed to initialize bot system');
+      console.log('Bot system is currently disabled during Postgres migration');
       process.exit(1);
     }
   });

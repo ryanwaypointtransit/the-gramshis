@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDb, Market, Outcome, User, Position } from "@/lib/db";
+import { sql, Market, Outcome, User, Position } from "@/lib/db";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 import NavBar from "@/components/NavBar";
 
@@ -24,51 +24,53 @@ export default async function LeaderboardPage() {
     redirect("/");
   }
 
-  const db = getDb();
+  const usersResult = await sql`SELECT * FROM users`;
+  const users = usersResult.rows as User[];
 
-  const users = db.prepare("SELECT * FROM users").all() as User[];
+  const leaderboard: LeaderboardEntry[] = [];
 
-  const leaderboard: LeaderboardEntry[] = users.map((u) => {
+  for (const u of users) {
     // Calculate position values
-    const positions = db
-      .prepare(
-        `SELECT p.*, o.market_id
-         FROM positions p
-         JOIN outcomes o ON p.outcome_id = o.id
-         WHERE p.user_id = ? AND p.shares > 0`
-      )
-      .all(u.id) as (Position & { market_id: number })[];
+    const positionsResult = await sql`
+      SELECT p.*, o.market_id
+      FROM positions p
+      JOIN outcomes o ON p.outcome_id = o.id
+      WHERE p.user_id = ${u.id} AND p.shares > 0
+    `;
+    const positions = positionsResult.rows as (Position & { market_id: number })[];
 
     let positionValue = 0;
 
     for (const pos of positions) {
-      const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(pos.market_id) as Market;
+      const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
+      const market = marketResult.rows[0] as Market;
       if (market.status !== "open" && market.status !== "paused") continue;
 
-      const outcomes = db
-        .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-        .all(market.id) as Outcome[];
+      const outcomesResult = await sql`
+        SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
+      `;
+      const outcomes = outcomesResult.rows as Outcome[];
 
-      const sharesArray = outcomes.map((o) => o.shares_outstanding);
-      const prices = calculatePrices(sharesArray, market.liquidity_param);
+      const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
+      const prices = calculatePrices(sharesArray, Number(market.liquidity_param));
 
       const outcomeIndex = outcomes.findIndex((o) => o.id === pos.outcome_id);
       if (outcomeIndex !== -1) {
-        positionValue += pos.shares * prices[outcomeIndex];
+        positionValue += Number(pos.shares) * prices[outcomeIndex];
       }
     }
 
-    return {
+    leaderboard.push({
       rank: 0,
       id: u.id,
       name: u.name,
       displayName: u.display_name,
-      balance: u.balance,
+      balance: Number(u.balance),
       positionValue,
-      totalValue: u.balance + positionValue,
+      totalValue: Number(u.balance) + positionValue,
       isCurrentUser: u.id === user.id,
-    };
-  });
+    });
+  }
 
   // Sort by total value
   leaderboard.sort((a, b) => b.totalValue - a.totalValue);
@@ -84,7 +86,7 @@ export default async function LeaderboardPage() {
     <div className="min-h-screen bg-gray-50">
       <NavBar
         userName={user.display_name}
-        balance={user.balance}
+        balance={Number(user.balance)}
         isAdmin={user.is_admin === 1}
       />
 

@@ -1,12 +1,11 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import Database from "better-sqlite3";
+import { sql } from "@vercel/postgres";
 
 const KALSHI_API_KEY_ID = process.env.KALSHI_API_KEY_ID;
 const KALSHI_PRIVATE_KEY_PATH = process.env.KALSHI_PRIVATE_KEY_PATH || "./Grammys.txt";
 const KALSHI_BASE_URL = "https://api.elections.kalshi.com/trade-api/v2";
-const DB_PATH = process.env.DATABASE_URL || path.join(process.cwd(), "gramshis.db");
 
 // Map Kalshi event tickers to our market names - the 15 Grammy categories we're using
 const KALSHI_TO_LOCAL_MAP: Record<string, string> = {
@@ -178,13 +177,13 @@ async function main() {
   console.log("Fetching Grammy odds from Kalshi API...\n");
   const kalshiOdds = await fetchAllKalshiOdds();
 
-  const db = new Database(DB_PATH);
-  const localMarkets = db.prepare(`
+  // Fetch local markets from Postgres
+  const localMarketsResult = await sql`
     SELECT m.name, o.name as outcome_name
     FROM markets m JOIN outcomes o ON o.market_id = m.id
     ORDER BY m.id, o.display_order
-  `).all() as { name: string; outcome_name: string }[];
-  db.close();
+  `;
+  const localMarkets = localMarketsResult.rows as { name: string; outcome_name: string }[];
 
   // Group local outcomes by market
   const localByMarket = new Map<string, string[]>();
@@ -233,4 +232,4 @@ async function main() {
   }
 }
 
-main();
+main().catch(console.error);

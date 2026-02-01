@@ -1,19 +1,91 @@
-import Database from "better-sqlite3";
-import path from "path";
-import { createSchema } from "./schema";
+import { sql } from "@vercel/postgres";
 
-const DB_PATH = process.env.DATABASE_URL || path.join(process.cwd(), "gramshis.db");
+// Initialize the database schema
+export async function initDb() {
+  await sql`
+    -- Users table
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      display_name TEXT NOT NULL,
+      balance DECIMAL(10,2) DEFAULT 1000.00,
+      is_admin INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
 
-let db: Database.Database | null = null;
+  await sql`
+    -- Markets table
+    CREATE TABLE IF NOT EXISTS markets (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'open', 'paused', 'resolved')),
+      liquidity_param DECIMAL(10,2) DEFAULT 100,
+      winning_outcome_id INTEGER,
+      resolved_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
 
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
-    createSchema(db);
-  }
-  return db;
+  await sql`
+    -- Outcomes table
+    CREATE TABLE IF NOT EXISTS outcomes (
+      id SERIAL PRIMARY KEY,
+      market_id INTEGER NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      shares_outstanding DECIMAL(10,4) DEFAULT 0,
+      display_order INTEGER DEFAULT 0
+    )
+  `;
+
+  await sql`
+    -- Positions table (user holdings)
+    CREATE TABLE IF NOT EXISTS positions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      outcome_id INTEGER NOT NULL REFERENCES outcomes(id),
+      shares DECIMAL(10,4) DEFAULT 0,
+      avg_cost_basis DECIMAL(10,4) DEFAULT 0,
+      UNIQUE(user_id, outcome_id)
+    )
+  `;
+
+  await sql`
+    -- Transactions table (trade history)
+    CREATE TABLE IF NOT EXISTS transactions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      outcome_id INTEGER NOT NULL REFERENCES outcomes(id),
+      type TEXT NOT NULL CHECK(type IN ('buy', 'sell', 'payout')),
+      shares DECIMAL(10,4) NOT NULL,
+      price_per_share DECIMAL(10,4) NOT NULL,
+      total_cost DECIMAL(10,2) NOT NULL,
+      balance_before DECIMAL(10,2) NOT NULL,
+      balance_after DECIMAL(10,2) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    -- Admin logs table
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id SERIAL PRIMARY KEY,
+      admin_user_id INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id INTEGER,
+      details TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Create indexes
+  await sql`CREATE INDEX IF NOT EXISTS idx_outcomes_market ON outcomes(market_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_positions_outcome ON positions(outcome_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_transactions_outcome ON transactions(outcome_id)`;
 }
 
 // Type definitions for database rows
@@ -57,7 +129,7 @@ export interface Transaction {
   id: number;
   user_id: number;
   outcome_id: number;
-  type: "buy" | "sell";
+  type: "buy" | "sell" | "payout";
   shares: number;
   price_per_share: number;
   total_cost: number;
@@ -65,3 +137,6 @@ export interface Transaction {
   balance_after: number;
   created_at: string;
 }
+
+// Re-export sql for use in other modules
+export { sql };

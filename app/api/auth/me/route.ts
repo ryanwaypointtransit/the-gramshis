@@ -14,7 +14,7 @@ export async function GET() {
         id: user.id,
         name: user.name,
         displayName: user.display_name,
-        balance: user.balance,
+        balance: Number(user.balance),
         isAdmin: user.is_admin === 1,
       },
     });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, User } from "@/lib/db";
+import { sql, User } from "@/lib/db";
 import { verifyAdminHeader } from "@/lib/auth/session";
 
 export async function PATCH(
@@ -19,15 +19,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Amount is required" }, { status: 400 });
     }
 
-    const db = getDb();
-
-    const user = db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as User | undefined;
+    const userResult = await sql`SELECT * FROM users WHERE id = ${userId}`;
+    const user = userResult.rows[0] as User | undefined;
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const newBalance = user.balance + amount;
+    const newBalance = Number(user.balance) + amount;
 
     if (newBalance < 0) {
       return NextResponse.json(
@@ -36,25 +35,20 @@ export async function PATCH(
       );
     }
 
-    db.prepare("UPDATE users SET balance = ? WHERE id = ?").run(newBalance, userId);
+    await sql`UPDATE users SET balance = ${newBalance} WHERE id = ${userId}`;
 
     // Log admin action (system/anonymous)
-    db.prepare(
-      "INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
-    ).run(
-      0,
-      "adjust_balance",
-      "user",
-      userId,
-      JSON.stringify({ amount, reason, oldBalance: user.balance, newBalance })
-    );
+    await sql`
+      INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) 
+      VALUES (${0}, ${'adjust_balance'}, ${'user'}, ${userId}, ${JSON.stringify({ amount, reason, oldBalance: user.balance, newBalance })})
+    `;
 
     return NextResponse.json({
       success: true,
       user: {
         id: user.id,
         name: user.name,
-        oldBalance: user.balance,
+        oldBalance: Number(user.balance),
         newBalance,
       },
     });

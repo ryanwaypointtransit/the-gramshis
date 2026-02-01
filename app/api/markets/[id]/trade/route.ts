@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, Market, Outcome, Position, User } from "@/lib/db";
+import { sql, Market, Outcome, Position, User } from "@/lib/db";
 import { calculateTradeCost, calculatePrices, validateTrade } from "@/lib/market-maker/lmsr";
 import { requireAuth } from "@/lib/auth/session";
 
@@ -21,12 +21,8 @@ export async function POST(
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
-    const db = getDb();
-
-    // Start transaction
-    const market = db
-      .prepare("SELECT * FROM markets WHERE id = ?")
-      .get(marketId) as Market | undefined;
+    const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+    const market = marketResult.rows[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -36,9 +32,10 @@ export async function POST(
       return NextResponse.json({ error: "Market is not open for trading" }, { status: 400 });
     }
 
-    const outcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(marketId) as Outcome[];
+    const outcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+    `;
+    const outcomes = outcomesResult.rows as Outcome[];
 
     const outcomeIndex = outcomes.findIndex((o) => o.id === outcomeId);
     if (outcomeIndex === -1) {
@@ -46,25 +43,28 @@ export async function POST(
     }
 
     // Get fresh user balance
-    const freshUser = db.prepare("SELECT * FROM users WHERE id = ?").get(user.id) as User;
+    const freshUserResult = await sql`SELECT * FROM users WHERE id = ${user.id}`;
+    const freshUser = freshUserResult.rows[0] as User;
 
     // Get user's current position
-    const position = db
-      .prepare("SELECT * FROM positions WHERE user_id = ? AND outcome_id = ?")
-      .get(user.id, outcomeId) as Position | undefined;
+    const positionResult = await sql`
+      SELECT * FROM positions WHERE user_id = ${user.id} AND outcome_id = ${outcomeId}
+    `;
+    const position = positionResult.rows[0] as Position | undefined;
 
-    const userShares = position?.shares || 0;
-    const currentShares = outcomes.map((o) => o.shares_outstanding);
+    const userShares = position ? Number(position.shares) : 0;
+    const currentShares = outcomes.map((o) => Number(o.shares_outstanding));
     const sharesToTrade = action === "sell" ? -shares : shares;
+    const liquidityParam = Number(market.liquidity_param);
 
     // Validate trade
     const validationError = validateTrade(
       currentShares,
       outcomeIndex,
       sharesToTrade,
-      freshUser.balance,
+      Number(freshUser.balance),
       userShares,
-      market.liquidity_param
+      liquidityParam
     );
 
     if (validationError) {
@@ -72,63 +72,55 @@ export async function POST(
     }
 
     // Calculate cost
-    const cost = calculateTradeCost(currentShares, outcomeIndex, sharesToTrade, market.liquidity_param);
+    const cost = calculateTradeCost(currentShares, outcomeIndex, sharesToTrade, liquidityParam);
     const avgPrice = Math.abs(cost / sharesToTrade);
 
-    // Execute trade in transaction
-    const executeTrade = db.transaction(() => {
-      // Update user balance
-      const newBalance = freshUser.balance - cost;
-      db.prepare("UPDATE users SET balance = ? WHERE id = ?").run(newBalance, user.id);
+    // Execute trade
+    const newBalance = Number(freshUser.balance) - cost;
+    
+    // Update user balance
+    await sql`UPDATE users SET balance = ${newBalance} WHERE id = ${user.id}`;
 
-      // Update or create position
-      const newShares = userShares + sharesToTrade;
-      if (position) {
-        if (newShares > 0.0001) {
-          // Update average cost basis for buys
-          let newAvgCost = position.avg_cost_basis;
-          if (action === "buy") {
-            const totalCost = position.avg_cost_basis * userShares + cost;
-            newAvgCost = totalCost / newShares;
-          }
-          db.prepare("UPDATE positions SET shares = ?, avg_cost_basis = ? WHERE id = ?").run(
-            newShares,
-            newAvgCost,
-            position.id
-          );
-        } else {
-          // Delete position if shares are 0
-          db.prepare("DELETE FROM positions WHERE id = ?").run(position.id);
+    // Update or create position
+    const newSharesCount = userShares + sharesToTrade;
+    if (position) {
+      if (newSharesCount > 0.0001) {
+        // Update average cost basis for buys
+        let newAvgCost = Number(position.avg_cost_basis);
+        if (action === "buy") {
+          const totalCost = Number(position.avg_cost_basis) * userShares + cost;
+          newAvgCost = totalCost / newSharesCount;
         }
-      } else if (sharesToTrade > 0) {
-        db.prepare(
-          "INSERT INTO positions (user_id, outcome_id, shares, avg_cost_basis) VALUES (?, ?, ?, ?)"
-        ).run(user.id, outcomeId, sharesToTrade, avgPrice);
+        await sql`UPDATE positions SET shares = ${newSharesCount}, avg_cost_basis = ${newAvgCost} WHERE id = ${position.id}`;
+      } else {
+        // Delete position if shares are 0
+        await sql`DELETE FROM positions WHERE id = ${position.id}`;
       }
+    } else if (sharesToTrade > 0) {
+      await sql`
+        INSERT INTO positions (user_id, outcome_id, shares, avg_cost_basis) 
+        VALUES (${user.id}, ${outcomeId}, ${sharesToTrade}, ${avgPrice})
+      `;
+    }
 
-      // Update outcome shares outstanding
-      db.prepare("UPDATE outcomes SET shares_outstanding = shares_outstanding + ? WHERE id = ?").run(
-        sharesToTrade,
-        outcomeId
-      );
+    // Update outcome shares outstanding
+    await sql`
+      UPDATE outcomes SET shares_outstanding = shares_outstanding + ${sharesToTrade} WHERE id = ${outcomeId}
+    `;
 
-      // Log transaction
-      db.prepare(
-        `INSERT INTO transactions (user_id, outcome_id, type, shares, price_per_share, total_cost, balance_before, balance_after)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      ).run(user.id, outcomeId, action, shares, avgPrice, Math.abs(cost), freshUser.balance, newBalance);
-
-      return newBalance;
-    });
-
-    const newBalance = executeTrade();
+    // Log transaction
+    await sql`
+      INSERT INTO transactions (user_id, outcome_id, type, shares, price_per_share, total_cost, balance_before, balance_after)
+      VALUES (${user.id}, ${outcomeId}, ${action}, ${shares}, ${avgPrice}, ${Math.abs(cost)}, ${freshUser.balance}, ${newBalance})
+    `;
 
     // Get updated prices
-    const updatedOutcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(marketId) as Outcome[];
-    const newSharesArray = updatedOutcomes.map((o) => o.shares_outstanding);
-    const newPrices = calculatePrices(newSharesArray, market.liquidity_param);
+    const updatedOutcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+    `;
+    const updatedOutcomes = updatedOutcomesResult.rows as Outcome[];
+    const newSharesArray = updatedOutcomes.map((o) => Number(o.shares_outstanding));
+    const newPrices = calculatePrices(newSharesArray, liquidityParam);
 
     return NextResponse.json({
       success: true,

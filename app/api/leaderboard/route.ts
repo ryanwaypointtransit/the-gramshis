@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, Market, Outcome, User, Position } from "@/lib/db";
+import { sql, Market, Outcome, User, Position } from "@/lib/db";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 
 export const dynamic = "force-dynamic";
@@ -17,53 +17,55 @@ interface LeaderboardEntry {
 
 export async function GET() {
   try {
-    const db = getDb();
+    const usersResult = await sql`SELECT * FROM users`;
+    const users = usersResult.rows as User[];
 
-    const users = db.prepare("SELECT * FROM users").all() as User[];
+    const leaderboard: LeaderboardEntry[] = [];
 
-    const leaderboard: LeaderboardEntry[] = users.map((user) => {
+    for (const user of users) {
       // Calculate position values
-      const positions = db
-        .prepare(
-          `SELECT p.*, o.market_id
-           FROM positions p
-           JOIN outcomes o ON p.outcome_id = o.id
-           WHERE p.user_id = ? AND p.shares > 0`
-        )
-        .all(user.id) as (Position & { market_id: number })[];
+      const positionsResult = await sql`
+        SELECT p.*, o.market_id
+        FROM positions p
+        JOIN outcomes o ON p.outcome_id = o.id
+        WHERE p.user_id = ${user.id} AND p.shares > 0
+      `;
+      const positions = positionsResult.rows as (Position & { market_id: number })[];
 
       let positionValue = 0;
       let positionCount = 0;
 
       for (const pos of positions) {
-        const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(pos.market_id) as Market;
+        const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
+        const market = marketResult.rows[0] as Market;
         if (market.status !== "open" && market.status !== "paused") continue;
 
-        const outcomes = db
-          .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-          .all(market.id) as Outcome[];
+        const outcomesResult = await sql`
+          SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
+        `;
+        const outcomes = outcomesResult.rows as Outcome[];
 
-        const sharesArray = outcomes.map((o) => o.shares_outstanding);
-        const prices = calculatePrices(sharesArray, market.liquidity_param);
+        const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
+        const prices = calculatePrices(sharesArray, Number(market.liquidity_param));
 
         const outcomeIndex = outcomes.findIndex((o) => o.id === pos.outcome_id);
         if (outcomeIndex !== -1) {
-          positionValue += pos.shares * prices[outcomeIndex];
+          positionValue += Number(pos.shares) * prices[outcomeIndex];
           positionCount++;
         }
       }
 
-      return {
+      leaderboard.push({
         rank: 0,
         id: user.id,
         name: user.name,
         displayName: user.display_name,
-        balance: user.balance,
+        balance: Number(user.balance),
         positionValue,
-        totalValue: user.balance + positionValue,
+        totalValue: Number(user.balance) + positionValue,
         positionCount,
-      };
-    });
+      });
+    }
 
     // Sort by total value
     leaderboard.sort((a, b) => b.totalValue - a.totalValue);

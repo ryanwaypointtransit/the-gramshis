@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { getDb, User } from "@/lib/db";
+import { sql, User } from "@/lib/db";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "gramshis-secret-key-change-in-production"
@@ -69,10 +69,8 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
   }
 
-  const db = getDb();
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.userId) as User | undefined;
-
-  return user || null;
+  const result = await sql`SELECT * FROM users WHERE id = ${session.userId}`;
+  return (result.rows[0] as User) || null;
 }
 
 export async function requireAuth(): Promise<User> {
@@ -95,22 +93,23 @@ export function isAdminName(name: string): boolean {
   return ADMIN_NAMES.includes(name.toLowerCase());
 }
 
-export function getOrCreateUser(name: string, displayName?: string): User {
-  const db = getDb();
+export async function getOrCreateUser(name: string, displayName?: string): Promise<User> {
   const normalizedName = name.toLowerCase().trim();
   const display = displayName || name;
 
   // Try to find existing user
-  let user = db.prepare("SELECT * FROM users WHERE name = ?").get(normalizedName) as User | undefined;
+  const existingResult = await sql`SELECT * FROM users WHERE name = ${normalizedName}`;
+  let user = existingResult.rows[0] as User | undefined;
 
   if (!user) {
     // Create new user
     const isAdmin = isAdminName(normalizedName) ? 1 : 0;
-    const result = db
-      .prepare("INSERT INTO users (name, display_name, is_admin) VALUES (?, ?, ?)")
-      .run(normalizedName, display, isAdmin);
-
-    user = db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid) as User;
+    const insertResult = await sql`
+      INSERT INTO users (name, display_name, is_admin) 
+      VALUES (${normalizedName}, ${display}, ${isAdmin})
+      RETURNING *
+    `;
+    user = insertResult.rows[0] as User;
   }
 
   return user;

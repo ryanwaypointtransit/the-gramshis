@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name too long" }, { status: 400 });
     }
 
-    const user = getOrCreateUser(trimmedName, trimmedName);
+    const user = await getOrCreateUser(trimmedName, trimmedName);
     const token = await createSession(user);
 
     const response = NextResponse.json({
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         name: user.name,
         displayName: user.display_name,
-        balance: user.balance,
+        balance: Number(user.balance),
         isAdmin: user.is_admin === 1,
       },
     });

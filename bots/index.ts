@@ -3,19 +3,19 @@
  * 
  * This module provides the API for starting, stopping, and monitoring
  * the bot system from other parts of the application.
+ * 
+ * NOTE: Bot system is currently disabled during Postgres migration.
  */
 
-import path from 'path';
 import { initialize, startSystem, stopSystem, getStatus, shutdown } from './orchestrator';
 
 // Bot system API
 export const BotSystem = {
   /**
    * Initialize the bot system
-   * @param dbPath Path to the database
    */
-  async initialize(dbPath: string = path.join(process.cwd(), 'gramshis.db')): Promise<boolean> {
-    return await initialize(dbPath);
+  async initialize(): Promise<boolean> {
+    return await initialize();
   },
   
   /**
@@ -35,7 +35,7 @@ export const BotSystem = {
   /**
    * Get the current status of the bot system
    */
-  getStatus(): any {
+  getStatus(): ReturnType<typeof getStatus> {
     return getStatus();
   },
   
@@ -64,7 +64,7 @@ if (require.main === module) {
         process.exit(0);
       });
     } else {
-      console.error('Failed to initialize bot system');
+      console.error('Bot system is currently disabled during Postgres migration');
       process.exit(1);
     }
   })();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, Market, Outcome } from "@/lib/db";
+import { sql, Market, Outcome } from "@/lib/db";
 import { calculateTradeCost, calculatePrices, averagePricePerShare } from "@/lib/market-maker/lmsr";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +20,8 @@ export async function GET(
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
     }
 
-    const db = getDb();
-
-    const market = db
-      .prepare("SELECT * FROM markets WHERE id = ?")
-      .get(marketId) as Market | undefined;
+    const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+    const market = marketResult.rows[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -34,26 +31,28 @@ export async function GET(
       return NextResponse.json({ error: "Market is not open for trading" }, { status: 400 });
     }
 
-    const outcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(marketId) as Outcome[];
+    const outcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+    `;
+    const outcomes = outcomesResult.rows as Outcome[];
 
     const outcomeIndex = outcomes.findIndex((o) => o.id === outcomeId);
     if (outcomeIndex === -1) {
       return NextResponse.json({ error: "Outcome not found" }, { status: 404 });
     }
 
-    const currentShares = outcomes.map((o) => o.shares_outstanding);
+    const currentShares = outcomes.map((o) => Number(o.shares_outstanding));
     const sharesToTrade = action === "sell" ? -shares : shares;
+    const liquidityParam = Number(market.liquidity_param);
 
-    const cost = calculateTradeCost(currentShares, outcomeIndex, sharesToTrade, market.liquidity_param);
-    const avgPrice = averagePricePerShare(currentShares, outcomeIndex, sharesToTrade, market.liquidity_param);
+    const cost = calculateTradeCost(currentShares, outcomeIndex, sharesToTrade, liquidityParam);
+    const avgPrice = averagePricePerShare(currentShares, outcomeIndex, sharesToTrade, liquidityParam);
 
     // Calculate new prices after trade
     const newShares = [...currentShares];
     newShares[outcomeIndex] += sharesToTrade;
-    const newPrices = calculatePrices(newShares, market.liquidity_param);
-    const currentPrices = calculatePrices(currentShares, market.liquidity_param);
+    const newPrices = calculatePrices(newShares, liquidityParam);
+    const currentPrices = calculatePrices(currentShares, liquidityParam);
 
     return NextResponse.json({
       quote: {

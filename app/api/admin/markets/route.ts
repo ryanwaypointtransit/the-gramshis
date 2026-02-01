@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { verifyAdminHeader } from "@/lib/auth/session";
 
 export async function GET(request: NextRequest) {
@@ -7,14 +7,10 @@ export async function GET(request: NextRequest) {
     if (!verifyAdminHeader(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
-    
-    const db = getDb();
 
-    const markets = db
-      .prepare("SELECT * FROM markets ORDER BY created_at DESC")
-      .all();
+    const result = await sql`SELECT * FROM markets ORDER BY created_at DESC`;
 
-    return NextResponse.json({ markets });
+    return NextResponse.json({ markets: result.rows });
   } catch (error) {
     console.error("Admin markets error:", error);
     return NextResponse.json({ error: "Failed to fetch markets" }, { status: 500 });
@@ -36,34 +32,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getDb();
+    // Create market
+    const marketResult = await sql`
+      INSERT INTO markets (name, description, liquidity_param, status) 
+      VALUES (${name}, ${description || null}, ${liquidityParam}, 'draft')
+      RETURNING id
+    `;
+    const marketId = marketResult.rows[0].id;
 
-    const createMarket = db.transaction(() => {
-      // Create market
-      const marketResult = db
-        .prepare(
-          "INSERT INTO markets (name, description, liquidity_param, status) VALUES (?, ?, ?, 'draft')"
-        )
-        .run(name, description || null, liquidityParam);
+    // Create outcomes
+    for (let i = 0; i < outcomes.length; i++) {
+      await sql`
+        INSERT INTO outcomes (market_id, name, display_order) 
+        VALUES (${marketId}, ${outcomes[i]}, ${i})
+      `;
+    }
 
-      const marketId = marketResult.lastInsertRowid;
-
-      // Create outcomes
-      for (let i = 0; i < outcomes.length; i++) {
-        db.prepare(
-          "INSERT INTO outcomes (market_id, name, display_order) VALUES (?, ?, ?)"
-        ).run(marketId, outcomes[i], i);
-      }
-
-      // Log admin action (system/anonymous)
-      db.prepare(
-        "INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
-      ).run(0, "create_market", "market", marketId, JSON.stringify({ name, outcomes }));
-
-      return marketId;
-    });
-
-    const marketId = createMarket();
+    // Log admin action (system/anonymous)
+    await sql`
+      INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) 
+      VALUES (${0}, ${'create_market'}, ${'market'}, ${marketId}, ${JSON.stringify({ name, outcomes })})
+    `;
 
     return NextResponse.json({ success: true, marketId });
   } catch (error) {

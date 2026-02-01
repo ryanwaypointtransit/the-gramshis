@@ -1,10 +1,4 @@
-import Database from "better-sqlite3";
-import path from "path";
-
-const DB_PATH = process.env.DATABASE_URL || path.join(process.cwd(), "gramshis.db");
-const db = new Database(DB_PATH);
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+import { sql } from "@vercel/postgres";
 
 interface MarketSeed {
   name: string;
@@ -182,172 +176,6 @@ const markets: MarketSeed[] = [
     ],
   },
   {
-    name: "Best R&B Performance",
-    description: "Awarded to the best R&B performance",
-    outcomes: [
-      "YUKON - Justin Bieber",
-      "It Depends - Chris Brown & Bryson Tiller",
-      "Folded - Kehlani",
-      "MUTT (Live From NPR's Tiny Desk) - Leon Thomas",
-      "Heart Of A Woman - Summer Walker",
-    ],
-  },
-  {
-    name: "Best Dance/Electronic Album",
-    description: "Awarded to the best dance/electronic album",
-    outcomes: [
-      "EUSEXUA - FKA twigs",
-      "Ten Days - Fred again..",
-      "Fancy That - PinkPantheress",
-      "Inhale / Exhale - RÜFÜS DU SOL",
-      "F--- U SKRILLEX - Skrillex",
-    ],
-  },
-  {
-    name: "Best Dance Pop Recording",
-    description: "Awarded to the best dance pop recording",
-    outcomes: [
-      "Bluest Flame - Selena Gomez & benny blanco",
-      "Abracadabra - Lady Gaga",
-      "Midnight Sun - Zara Larsson",
-      "Just Keep Watching - Tate McRae",
-      "Illegal - PinkPantheress",
-    ],
-  },
-  {
-    name: "Songwriter Of The Year, Non-Classical",
-    description: "Awarded to the songwriter of the year",
-    outcomes: [
-      "Amy Allen",
-      "Edgar Barrera",
-      "Jessie Jo Dillon",
-      "Tobias Jesso Jr.",
-      "Laura Veltz",
-    ],
-  },
-  {
-    name: "Best Metal Performance",
-    description: "Awarded to the best metal performance",
-    outcomes: [
-      "Night Terror - Dream Theater",
-      "Lachryma - Ghost",
-      "Emergence - Sleep Token",
-      "Soft Spine - Spiritbox",
-      "BIRDS - Turnstile",
-    ],
-  },
-  {
-    name: "Best Dance/Electronic Recording",
-    description: "Awarded to the best dance/electronic recording",
-    outcomes: [
-      "No Cap - Disclosure & Anderson .Paak",
-      "Victory Lap - Fred again.., Skepta & PlaqueBoyMax",
-      "SPACE INVADER - KAYTRANADA",
-      "VOLTAGE - Skrillex",
-      "End Of Summer - Tame Impala",
-    ],
-  },
-  {
-    name: "Best Progressive R&B Album",
-    description: "Awarded to the best progressive R&B album",
-    outcomes: [
-      "BLOOM - Durand Bernarr",
-      "Adjust Brightness - Bilal",
-      "Love on Digital - Destin Conrad",
-      "Access All Areas - FLO",
-      "Come as You Are - Terrace Martin & Kenyon Dixon",
-    ],
-  },
-  {
-    name: "Best Traditional R&B Performance",
-    description: "Awarded to the best traditional R&B performance",
-    outcomes: [
-      "Here We Are - Durand Bernarr",
-      "UPTOWN - Lalah Hathaway",
-      "LOVE YOU TOO - Ledisi",
-      "Crybaby - SZA",
-      "VIBES DON'T LIE - Leon Thomas",
-    ],
-  },
-  {
-    name: "Best Contemporary Country Album",
-    description: "Awarded to the best contemporary country album",
-    outcomes: [
-      "Patterns - Kelsea Ballerini",
-      "Snipe Hunter - Tyler Childers",
-      "Evangeline vs. the Machine - Eric Church",
-      "Beautifully Broken - Jelly Roll",
-      "Postcards From Texas - Miranda Lambert",
-    ],
-  },
-  {
-    name: "Best Melodic Rap Performance",
-    description: "Awarded to the best melodic rap performance",
-    outcomes: [
-      "Proud Of Me - Fridayy & Meek Mill",
-      "Wholeheartedly - JID, Ty Dolla $ign & 6LACK",
-      "luther - Kendrick Lamar & SZA",
-      "WeMaj - Terrace Martin, Kenyon Dixon & Rapsody",
-      "SOMEBODY LOVES ME - Drake & PARTYNEXTDOOR",
-    ],
-  },
-  {
-    name: "Best Alternative Music Performance",
-    description: "Awarded to the best alternative music performance",
-    outcomes: [
-      "Everything Is Peaceful Love - Bon Iver",
-      "Alone - The Cure",
-      "Seein' Stars - Turnstile",
-      "Mangetout - Wet Leg",
-      "Parachute - Hayley Williams",
-    ],
-  },
-  {
-    name: "Best Traditional Pop Vocal Album",
-    description: "Awarded to the best traditional pop vocal album",
-    outcomes: [
-      "Wintersongs - Laila Biali",
-      "Who Believes in Angels? - Elton John & Brandi Carlile",
-      "The Gift of Love - Jennifer Hudson",
-      "Harlequin - Lady Gaga",
-      "A Matter of Time - Laufey",
-      "The Secret of Life: Partners Vol 2 - Barbra Streisand",
-    ],
-  },
-  {
-    name: "Best Country Solo Performance",
-    description: "Awarded to the best country solo performance",
-    outcomes: [
-      "Nose On the Grindstone - Tyler Childers",
-      "Good News - Shaboozey",
-      "I Never Lie - Zach Top",
-      "Somewhere Over Laredo - Lainey Wilson",
-      "Bad As I Used To Be - Chris Stapleton",
-    ],
-  },
-  {
-    name: "Best Traditional Country Album",
-    description: "Awarded to the best traditional country album (new category for 2026)",
-    outcomes: [
-      "Dollar a Day - Charley Crockett",
-      "American Romance - Lukas Nelson",
-      "Oh What a Beautiful World - Willie Nelson",
-      "Hard Headed Woman - Margo Price",
-      "Ain't in It for My Health - Zach Top",
-    ],
-  },
-  {
-    name: "Best Country Duo/Group Performance",
-    description: "Awarded to the best country duo/group performance",
-    outcomes: [
-      "A Song to Sing - Miranda Lambert & Chris Stapleton",
-      "Trailblazer - Reba McEntire, Miranda Lambert & Lainey Wilson",
-      "Love Me Like You Used to Do - Margo Price & Tyler Childers",
-      "Amen - Shaboozey & Jelly Roll",
-      "Honky Tonk Hall of Fame - George Strait & Chris Stapleton",
-    ],
-  },
-  {
     name: "Best Remixed Recording",
     description: "Awarded to the best remixed recording",
     outcomes: [
@@ -358,44 +186,126 @@ const markets: MarketSeed[] = [
       "Golden (David Guetta Remix) - HUNTR/X",
     ],
   },
-  {
-    name: "Best Spoken Word Poetry Album",
-    description: "Awarded to the best spoken word poetry album",
-    outcomes: [
-      "Black Shaman - Marc Marcel",
-      "Pages - Omari Hardwick & Anthony Hamilton",
-      "A Hurricane in Heels - Queen Sheba",
-      "Saul Williams Meets Carlos Niño & Friends - Saul Williams",
-      "Words for Days, Vol - Skillz",
-    ],
-  },
 ];
 
-function seedMarkets() {
+async function initSchema() {
+  console.log("Initializing database schema...\n");
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      display_name TEXT NOT NULL,
+      balance DECIMAL(10,2) DEFAULT 1000.00,
+      is_admin INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS markets (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'open', 'paused', 'resolved')),
+      liquidity_param DECIMAL(10,2) DEFAULT 100,
+      winning_outcome_id INTEGER,
+      resolved_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS outcomes (
+      id SERIAL PRIMARY KEY,
+      market_id INTEGER NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      shares_outstanding DECIMAL(10,4) DEFAULT 0,
+      display_order INTEGER DEFAULT 0
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS positions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      outcome_id INTEGER NOT NULL REFERENCES outcomes(id),
+      shares DECIMAL(10,4) DEFAULT 0,
+      avg_cost_basis DECIMAL(10,4) DEFAULT 0,
+      UNIQUE(user_id, outcome_id)
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS transactions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      outcome_id INTEGER NOT NULL REFERENCES outcomes(id),
+      type TEXT NOT NULL CHECK(type IN ('buy', 'sell', 'payout')),
+      shares DECIMAL(10,4) NOT NULL,
+      price_per_share DECIMAL(10,4) NOT NULL,
+      total_cost DECIMAL(10,2) NOT NULL,
+      balance_before DECIMAL(10,2) NOT NULL,
+      balance_after DECIMAL(10,2) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS admin_logs (
+      id SERIAL PRIMARY KEY,
+      admin_user_id INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id INTEGER,
+      details TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // Create indexes (IF NOT EXISTS is implicit for CREATE INDEX in some versions)
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_outcomes_market ON outcomes(market_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_positions_outcome ON positions(outcome_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_transactions_outcome ON transactions(outcome_id)`;
+  } catch {
+    // Indexes might already exist
+  }
+
+  console.log("Schema initialized!\n");
+}
+
+async function seedMarkets() {
   console.log("Starting market seed...\n");
-
-  const insertMarket = db.prepare(`
-    INSERT INTO markets (name, description, status)
-    VALUES (?, ?, 'draft')
-  `);
-
-  const insertOutcome = db.prepare(`
-    INSERT INTO outcomes (market_id, name, display_order)
-    VALUES (?, ?, ?)
-  `);
 
   let marketsCreated = 0;
   let outcomesCreated = 0;
 
   for (const market of markets) {
     try {
-      const result = insertMarket.run(market.name, market.description);
-      const marketId = result.lastInsertRowid;
+      // Check if market already exists
+      const existing = await sql`SELECT id FROM markets WHERE name = ${market.name}`;
+      if (existing.rows.length > 0) {
+        console.log(`Market already exists: ${market.name} (skipping)`);
+        continue;
+      }
+
+      const result = await sql`
+        INSERT INTO markets (name, description, status)
+        VALUES (${market.name}, ${market.description}, 'draft')
+        RETURNING id
+      `;
+      const marketId = result.rows[0].id;
       marketsCreated++;
       console.log(`Created market: ${market.name} (ID: ${marketId})`);
 
       for (let i = 0; i < market.outcomes.length; i++) {
-        insertOutcome.run(marketId, market.outcomes[i], i);
+        await sql`
+          INSERT INTO outcomes (market_id, name, display_order)
+          VALUES (${marketId}, ${market.outcomes[i]}, ${i})
+        `;
         outcomesCreated++;
       }
       console.log(`  Added ${market.outcomes.length} nominees\n`);
@@ -414,5 +324,16 @@ function seedMarkets() {
 }
 
 // Run the seed
-seedMarkets();
-db.close();
+async function main() {
+  try {
+    await initSchema();
+    await seedMarkets();
+    console.log("\nDone!");
+    process.exit(0);
+  } catch (error) {
+    console.error("Seed failed:", error);
+    process.exit(1);
+  }
+}
+
+main();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, Market, Outcome } from "@/lib/db";
+import { sql, Market, Outcome } from "@/lib/db";
 import { verifyAdminHeader } from "@/lib/auth/session";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 
@@ -15,26 +15,28 @@ export async function GET(
     const { id } = await params;
     const marketId = parseInt(id, 10);
 
-    const db = getDb();
-
-    const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(marketId) as Market | undefined;
+    const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+    const market = marketResult.rows[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
     }
 
-    const outcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(marketId) as Outcome[];
+    const outcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+    `;
+    const outcomes = outcomesResult.rows as Outcome[];
 
-    const shares = outcomes.map((o) => o.shares_outstanding);
-    const prices = calculatePrices(shares, market.liquidity_param);
+    const shares = outcomes.map((o) => Number(o.shares_outstanding));
+    const prices = calculatePrices(shares, Number(market.liquidity_param));
 
     return NextResponse.json({
       market: {
         ...market,
+        liquidity_param: Number(market.liquidity_param),
         outcomes: outcomes.map((o, i) => ({
           ...o,
+          shares_outstanding: Number(o.shares_outstanding),
           price: prices[i],
         })),
       },
@@ -58,9 +60,8 @@ export async function PATCH(
     const marketId = parseInt(id, 10);
     const { status, name, description } = await request.json();
 
-    const db = getDb();
-
-    const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(marketId) as Market | undefined;
+    const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+    const market = marketResult.rows[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -83,33 +84,30 @@ export async function PATCH(
       }
     }
 
-    const updates: string[] = [];
-    const values: (string | number)[] = [];
-
-    if (status) {
-      updates.push("status = ?");
-      values.push(status);
-    }
-    if (name) {
-      updates.push("name = ?");
-      values.push(name);
-    }
-    if (description !== undefined) {
-      updates.push("description = ?");
-      values.push(description);
-    }
-
-    if (updates.length === 0) {
+    // Build and execute updates
+    if (status && name && description !== undefined) {
+      await sql`UPDATE markets SET status = ${status}, name = ${name}, description = ${description} WHERE id = ${marketId}`;
+    } else if (status && name) {
+      await sql`UPDATE markets SET status = ${status}, name = ${name} WHERE id = ${marketId}`;
+    } else if (status && description !== undefined) {
+      await sql`UPDATE markets SET status = ${status}, description = ${description} WHERE id = ${marketId}`;
+    } else if (name && description !== undefined) {
+      await sql`UPDATE markets SET name = ${name}, description = ${description} WHERE id = ${marketId}`;
+    } else if (status) {
+      await sql`UPDATE markets SET status = ${status} WHERE id = ${marketId}`;
+    } else if (name) {
+      await sql`UPDATE markets SET name = ${name} WHERE id = ${marketId}`;
+    } else if (description !== undefined) {
+      await sql`UPDATE markets SET description = ${description} WHERE id = ${marketId}`;
+    } else {
       return NextResponse.json({ error: "No updates provided" }, { status: 400 });
     }
 
-    values.push(marketId);
-    db.prepare(`UPDATE markets SET ${updates.join(", ")} WHERE id = ?`).run(...values);
-
     // Log admin action (system/anonymous)
-    db.prepare(
-      "INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
-    ).run(0, "update_market", "market", marketId, JSON.stringify({ status, name, description }));
+    await sql`
+      INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) 
+      VALUES (${0}, ${'update_market'}, ${'market'}, ${marketId}, ${JSON.stringify({ status, name, description })})
+    `;
 
     return NextResponse.json({ success: true });
   } catch (error) {

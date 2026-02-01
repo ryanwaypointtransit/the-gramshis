@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, Market, Outcome } from "@/lib/db";
+import { sql, Market, Outcome } from "@/lib/db";
 import { verifyAdminHeader } from "@/lib/auth/session";
 import { sharesForTargetPrices, calculatePrices } from "@/lib/market-maker/lmsr";
 
@@ -21,9 +21,8 @@ export async function POST(
       return NextResponse.json({ error: "Odds array is required" }, { status: 400 });
     }
 
-    const db = getDb();
-
-    const market = db.prepare("SELECT * FROM markets WHERE id = ?").get(marketId) as Market | undefined;
+    const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+    const market = marketResult.rows[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -36,9 +35,10 @@ export async function POST(
       );
     }
 
-    const outcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(marketId) as Outcome[];
+    const outcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+    `;
+    const outcomes = outcomesResult.rows as Outcome[];
 
     if (odds.length !== outcomes.length) {
       return NextResponse.json(
@@ -61,27 +61,21 @@ export async function POST(
     }
 
     // Calculate required shares for these prices
-    const shares = sharesForTargetPrices(prices, market.liquidity_param);
+    const shares = sharesForTargetPrices(prices, Number(market.liquidity_param));
 
     // Update outcomes with new shares
-    const setOdds = db.transaction(() => {
-      for (let i = 0; i < outcomes.length; i++) {
-        db.prepare("UPDATE outcomes SET shares_outstanding = ? WHERE id = ?").run(
-          shares[i],
-          outcomes[i].id
-        );
-      }
+    for (let i = 0; i < outcomes.length; i++) {
+      await sql`UPDATE outcomes SET shares_outstanding = ${shares[i]} WHERE id = ${outcomes[i].id}`;
+    }
 
-      // Log admin action (system/anonymous)
-      db.prepare(
-        "INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
-      ).run(0, "set_odds", "market", marketId, JSON.stringify({ odds, shares }));
-    });
-
-    setOdds();
+    // Log admin action (system/anonymous)
+    await sql`
+      INSERT INTO admin_logs (admin_user_id, action, target_type, target_id, details) 
+      VALUES (${0}, ${'set_odds'}, ${'market'}, ${marketId}, ${JSON.stringify({ odds, shares })})
+    `;
 
     // Return the actual resulting prices (may differ slightly due to normalization)
-    const resultingPrices = calculatePrices(shares, market.liquidity_param);
+    const resultingPrices = calculatePrices(shares, Number(market.liquidity_param));
 
     return NextResponse.json({
       success: true,

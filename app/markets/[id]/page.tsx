@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDb, Market, Outcome, Position } from "@/lib/db";
+import { sql, Market, Outcome, Position } from "@/lib/db";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 import NavBar from "@/components/NavBar";
 import TradeForm from "@/components/markets/TradeForm";
@@ -31,37 +31,37 @@ export default async function MarketDetailPage({
     notFound();
   }
 
-  const db = getDb();
-
-  const market = db
-    .prepare("SELECT * FROM markets WHERE id = ?")
-    .get(marketId) as Market | undefined;
+  const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
+  const market = marketResult.rows[0] as Market | undefined;
 
   if (!market || market.status === "draft") {
     notFound();
   }
 
-  const outcomes = db
-    .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-    .all(marketId) as Outcome[];
+  const outcomesResult = await sql`
+    SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
+  `;
+  const outcomes = outcomesResult.rows as Outcome[];
 
-  const shares = outcomes.map((o) => o.shares_outstanding);
-  const prices = calculatePrices(shares, market.liquidity_param);
+  const shares = outcomes.map((o) => Number(o.shares_outstanding));
+  const prices = calculatePrices(shares, Number(market.liquidity_param));
 
-  // Get user positions
-  const positions = db
-    .prepare(
-      `SELECT * FROM positions WHERE user_id = ? AND outcome_id IN (${outcomes.map(() => "?").join(",")})`
-    )
-    .all(user.id, ...outcomes.map((o) => o.id)) as Position[];
+  // Get user positions (using subquery to get outcome IDs)
+  const positionsResult = await sql`
+    SELECT * FROM positions 
+    WHERE user_id = ${user.id} 
+    AND outcome_id IN (SELECT id FROM outcomes WHERE market_id = ${marketId})
+  `;
+  const positions = positionsResult.rows as Position[];
 
   const userPositions: Record<number, number> = positions.reduce((acc, p) => {
-    acc[p.outcome_id] = p.shares;
+    acc[p.outcome_id] = Number(p.shares);
     return acc;
   }, {} as Record<number, number>);
 
   const outcomesWithPrices: OutcomeWithPrice[] = outcomes.map((o, i) => ({
     ...o,
+    shares_outstanding: Number(o.shares_outstanding),
     price: prices[i],
     userShares: userPositions[o.id] || 0,
   }));
@@ -74,11 +74,13 @@ export default async function MarketDetailPage({
     ? outcomes.find((o) => o.id === market.winning_outcome_id)
     : null;
 
+  const userBalance = Number(user.balance);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar
         userName={user.display_name}
-        balance={user.balance}
+        balance={userBalance}
         isAdmin={user.is_admin === 1}
       />
 
@@ -181,7 +183,7 @@ export default async function MarketDetailPage({
             <TradeForm
               marketId={market.id}
               outcomes={outcomesWithPrices}
-              userBalance={user.balance}
+              userBalance={userBalance}
               isOpen={market.status === "open"}
             />
           </div>

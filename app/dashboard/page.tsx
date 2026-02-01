@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getDb, Market, Outcome, Position } from "@/lib/db";
+import { sql, Outcome, Position } from "@/lib/db";
 import { calculatePrices } from "@/lib/market-maker/lmsr";
 import NavBar from "@/components/NavBar";
 
@@ -24,19 +24,16 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const db = getDb();
-
   // Get user's positions with market details
-  const rawPositions = db
-    .prepare(
-      `SELECT p.*, o.name as outcome_name, o.market_id, m.name as market_name, m.status as market_status, m.liquidity_param
-       FROM positions p
-       JOIN outcomes o ON p.outcome_id = o.id
-       JOIN markets m ON o.market_id = m.id
-       WHERE p.user_id = ? AND p.shares > 0
-       ORDER BY m.status = 'open' DESC, m.created_at DESC`
-    )
-    .all(user.id) as (Position & {
+  const rawPositionsResult = await sql`
+    SELECT p.*, o.name as outcome_name, o.market_id, m.name as market_name, m.status as market_status, m.liquidity_param
+    FROM positions p
+    JOIN outcomes o ON p.outcome_id = o.id
+    JOIN markets m ON o.market_id = m.id
+    WHERE p.user_id = ${user.id} AND p.shares > 0
+    ORDER BY m.status = 'open' DESC, m.created_at DESC
+  `;
+  const rawPositions = rawPositionsResult.rows as (Position & {
     outcome_name: string;
     market_id: number;
     market_name: string;
@@ -44,21 +41,25 @@ export default async function DashboardPage() {
     liquidity_param: number;
   })[];
 
-  const positions: PositionWithDetails[] = rawPositions.map((p) => {
-    const outcomes = db
-      .prepare("SELECT * FROM outcomes WHERE market_id = ? ORDER BY display_order")
-      .all(p.market_id) as Outcome[];
+  const positions: PositionWithDetails[] = [];
+  for (const p of rawPositions) {
+    const outcomesResult = await sql`
+      SELECT * FROM outcomes WHERE market_id = ${p.market_id} ORDER BY display_order
+    `;
+    const outcomes = outcomesResult.rows as Outcome[];
 
-    const shares = outcomes.map((o) => o.shares_outstanding);
-    const prices = calculatePrices(shares, p.liquidity_param);
+    const shares = outcomes.map((o) => Number(o.shares_outstanding));
+    const prices = calculatePrices(shares, Number(p.liquidity_param));
     const outcomeIndex = outcomes.findIndex((o) => o.id === p.outcome_id);
     const currentPrice = prices[outcomeIndex] || 0;
-    const currentValue = p.shares * currentPrice;
-    const costBasis = p.shares * p.avg_cost_basis;
+    const currentValue = Number(p.shares) * currentPrice;
+    const costBasis = Number(p.shares) * Number(p.avg_cost_basis);
     const profitLoss = currentValue - costBasis;
 
-    return {
+    positions.push({
       ...p,
+      shares: Number(p.shares),
+      avg_cost_basis: Number(p.avg_cost_basis),
       outcomeName: p.outcome_name,
       marketId: p.market_id,
       marketName: p.market_name,
@@ -66,8 +67,8 @@ export default async function DashboardPage() {
       currentPrice,
       currentValue,
       profitLoss,
-    };
-  });
+    });
+  }
 
   const totalPositionValue = positions
     .filter((p) => p.marketStatus === "open" || p.marketStatus === "paused")
@@ -78,17 +79,16 @@ export default async function DashboardPage() {
     .reduce((sum, p) => sum + p.profitLoss, 0);
 
   // Get recent transactions
-  const transactions = db
-    .prepare(
-      `SELECT t.*, o.name as outcome_name, m.name as market_name
-       FROM transactions t
-       JOIN outcomes o ON t.outcome_id = o.id
-       JOIN markets m ON o.market_id = m.id
-       WHERE t.user_id = ?
-       ORDER BY t.created_at DESC
-       LIMIT 10`
-    )
-    .all(user.id) as (Position & {
+  const transactionsResult = await sql`
+    SELECT t.*, o.name as outcome_name, m.name as market_name
+    FROM transactions t
+    JOIN outcomes o ON t.outcome_id = o.id
+    JOIN markets m ON o.market_id = m.id
+    WHERE t.user_id = ${user.id}
+    ORDER BY t.created_at DESC
+    LIMIT 10
+  `;
+  const transactions = transactionsResult.rows as (Position & {
     type: string;
     price_per_share: number;
     total_cost: number;
@@ -97,11 +97,13 @@ export default async function DashboardPage() {
     market_name: string;
   })[];
 
+  const userBalance = Number(user.balance);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar
         userName={user.display_name}
-        balance={user.balance}
+        balance={userBalance}
         isAdmin={user.is_admin === 1}
       />
 
@@ -113,7 +115,7 @@ export default async function DashboardPage() {
           <div className="card">
             <p className="text-sm text-gray-500 mb-1">Cash Balance</p>
             <p className="text-3xl font-bold text-gray-900">
-              ${user.balance.toFixed(2)}
+              ${userBalance.toFixed(2)}
             </p>
           </div>
           <div className="card">
@@ -125,7 +127,7 @@ export default async function DashboardPage() {
           <div className="card">
             <p className="text-sm text-gray-500 mb-1">Total Portfolio</p>
             <p className="text-3xl font-bold text-grammy-gold">
-              ${(user.balance + totalPositionValue).toFixed(2)}
+              ${(userBalance + totalPositionValue).toFixed(2)}
             </p>
             {totalProfitLoss !== 0 && (
               <p
@@ -227,8 +229,8 @@ export default async function DashboardPage() {
                     <span className="ml-2 text-gray-500 text-sm">in {t.market_name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-gray-900">{t.shares.toFixed(2)} shares</p>
-                    <p className="text-sm text-gray-500">${t.total_cost.toFixed(2)}</p>
+                    <p className="text-gray-900">{Number(t.shares).toFixed(2)} shares</p>
+                    <p className="text-sm text-gray-500">${Number(t.total_cost).toFixed(2)}</p>
                   </div>
                 </div>
               ))}
