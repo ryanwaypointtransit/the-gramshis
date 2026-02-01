@@ -16,7 +16,7 @@ export async function GET(
     const marketId = parseInt(id, 10);
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -25,7 +25,7 @@ export async function GET(
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     const shares = outcomes.map((o) => Number(o.shares_outstanding));
     const prices = calculatePrices(shares, Number(market.liquidity_param));
@@ -61,7 +61,7 @@ export async function PATCH(
     const { status, name, description } = await request.json();
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });

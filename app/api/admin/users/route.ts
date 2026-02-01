@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     const result = await sql`SELECT * FROM users ORDER BY created_at DESC`;
 
-    return NextResponse.json({ users: result.rows as User[] });
+    return NextResponse.json({ users: result as User[] });
   } catch (error) {
     console.error("Admin users error:", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });

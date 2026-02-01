@@ -25,7 +25,7 @@ export async function GET(
     const session = await getSession();
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -34,7 +34,7 @@ export async function GET(
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     const shares = outcomes.map((o) => Number(o.shares_outstanding));
     const prices = calculatePrices(shares, Number(market.liquidity_param));
@@ -47,7 +47,7 @@ export async function GET(
         WHERE user_id = ${session.userId} 
         AND outcome_id IN (SELECT id FROM outcomes WHERE market_id = ${marketId})
       `;
-      const positions = positionsResult.rows as Position[];
+      const positions = positionsResult as Position[];
 
       userPositions = positions.reduce((acc, p) => {
         acc[p.outcome_id] = Number(p.shares);

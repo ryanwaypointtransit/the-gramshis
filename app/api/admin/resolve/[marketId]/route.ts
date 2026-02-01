@@ -20,7 +20,7 @@ export async function POST(
     }
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -36,7 +36,7 @@ export async function POST(
     const winningOutcomeResult = await sql`
       SELECT * FROM outcomes WHERE id = ${winningOutcomeId} AND market_id = ${marketId}
     `;
-    const winningOutcome = winningOutcomeResult.rows[0] as Outcome | undefined;
+    const winningOutcome = winningOutcomeResult[0] as Outcome | undefined;
 
     if (!winningOutcome) {
       return NextResponse.json({ error: "Winning outcome not found in this market" }, { status: 404 });
@@ -44,15 +44,15 @@ export async function POST(
 
     // Get all outcomes in this market
     const outcomesResult = await sql`SELECT * FROM outcomes WHERE market_id = ${marketId}`;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
-    // Get all positions for these outcomes (using a subquery instead of ANY)
+    // Get all positions for these outcomes (using a subquery)
     const positionsResult = await sql`
       SELECT * FROM positions 
       WHERE outcome_id IN (SELECT id FROM outcomes WHERE market_id = ${marketId}) 
       AND shares > 0
     `;
-    const positions = positionsResult.rows as Position[];
+    const positions = positionsResult as Position[];
 
     const payouts: { userId: number; amount: number; shares: number }[] = [];
 
@@ -62,7 +62,7 @@ export async function POST(
         // Winner! Pay $1 per share
         const payout = Number(position.shares);
         const userResult = await sql`SELECT * FROM users WHERE id = ${position.user_id}`;
-        const user = userResult.rows[0] as User;
+        const user = userResult[0] as User;
 
         await sql`UPDATE users SET balance = balance + ${payout} WHERE id = ${position.user_id}`;
 
@@ -73,9 +73,10 @@ export async function POST(
         });
 
         // Log payout transaction
+        const balanceAfter = Number(user.balance) + payout;
         await sql`
           INSERT INTO transactions (user_id, outcome_id, type, shares, price_per_share, total_cost, balance_before, balance_after)
-          VALUES (${position.user_id}, ${position.outcome_id}, 'payout', ${position.shares}, ${1.00}, ${payout}, ${user.balance}, ${Number(user.balance) + payout})
+          VALUES (${position.user_id}, ${position.outcome_id}, 'payout', ${position.shares}, ${1.00}, ${payout}, ${user.balance}, ${balanceAfter})
         `;
       }
       // Losing positions get nothing, positions remain for record keeping

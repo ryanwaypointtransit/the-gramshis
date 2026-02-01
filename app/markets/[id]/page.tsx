@@ -32,7 +32,7 @@ export default async function MarketDetailPage({
   }
 
   const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-  const market = marketResult.rows[0] as Market | undefined;
+  const market = marketResult[0] as Market | undefined;
 
   if (!market || market.status === "draft") {
     notFound();
@@ -41,7 +41,7 @@ export default async function MarketDetailPage({
   const outcomesResult = await sql`
     SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
   `;
-  const outcomes = outcomesResult.rows as Outcome[];
+  const outcomes = outcomesResult as Outcome[];
 
   const shares = outcomes.map((o) => Number(o.shares_outstanding));
   const prices = calculatePrices(shares, Number(market.liquidity_param));
@@ -52,7 +52,7 @@ export default async function MarketDetailPage({
     WHERE user_id = ${user.id} 
     AND outcome_id IN (SELECT id FROM outcomes WHERE market_id = ${marketId})
   `;
-  const positions = positionsResult.rows as Position[];
+  const positions = positionsResult as Position[];
 
   const userPositions: Record<number, number> = positions.reduce((acc, p) => {
     acc[p.outcome_id] = Number(p.shares);

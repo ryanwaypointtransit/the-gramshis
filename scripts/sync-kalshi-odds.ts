@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 const KALSHI_API_KEY_ID = process.env.KALSHI_API_KEY_ID;
 const KALSHI_PRIVATE_KEY_PATH = process.env.KALSHI_PRIVATE_KEY_PATH || "./Grammys.txt";
@@ -179,11 +181,12 @@ async function main() {
 
   // Fetch local markets from Postgres
   const localMarketsResult = await sql`
-    SELECT m.name, o.name as outcome_name
-    FROM markets m JOIN outcomes o ON o.market_id = m.id
+    SELECT m.name, o.name as outcome_name 
+    FROM markets m 
+    JOIN outcomes o ON o.market_id = m.id 
     ORDER BY m.id, o.display_order
   `;
-  const localMarkets = localMarketsResult.rows as { name: string; outcome_name: string }[];
+  const localMarkets = localMarketsResult as { name: string; outcome_name: string }[];
 
   // Group local outcomes by market
   const localByMarket = new Map<string, string[]>();

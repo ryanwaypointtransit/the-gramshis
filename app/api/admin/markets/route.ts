@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     const result = await sql`SELECT * FROM markets ORDER BY created_at DESC`;
 
-    return NextResponse.json({ markets: result.rows });
+    return NextResponse.json({ markets: result });
   } catch (error) {
     console.error("Admin markets error:", error);
     return NextResponse.json({ error: "Failed to fetch markets" }, { status: 500 });
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       VALUES (${name}, ${description || null}, ${liquidityParam}, 'draft')
       RETURNING id
     `;
-    const marketId = marketResult.rows[0].id;
+    const marketId = (marketResult[0] as { id: number }).id;
 
     // Create outcomes
     for (let i = 0; i < outcomes.length; i++) {

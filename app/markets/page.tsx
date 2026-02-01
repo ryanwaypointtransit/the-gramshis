@@ -27,14 +27,14 @@ export default async function MarketsPage() {
     END,
     created_at DESC
   `;
-  const markets = marketsResult.rows as Market[];
+  const markets = marketsResult as Market[];
 
   const marketsWithOutcomes: MarketWithOutcomes[] = [];
   for (const market of markets) {
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     const shares = outcomes.map((o) => Number(o.shares_outstanding));
     const prices = calculatePrices(shares, Number(market.liquidity_param));

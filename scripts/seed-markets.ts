@@ -1,4 +1,6 @@
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL!);
 
 interface MarketSeed {
   name: string;
@@ -263,7 +265,7 @@ async function initSchema() {
     )
   `;
 
-  // Create indexes (IF NOT EXISTS is implicit for CREATE INDEX in some versions)
+  // Create indexes
   try {
     await sql`CREATE INDEX IF NOT EXISTS idx_outcomes_market ON outcomes(market_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id)`;
@@ -287,23 +289,23 @@ async function seedMarkets() {
     try {
       // Check if market already exists
       const existing = await sql`SELECT id FROM markets WHERE name = ${market.name}`;
-      if (existing.rows.length > 0) {
+      if (existing.length > 0) {
         console.log(`Market already exists: ${market.name} (skipping)`);
         continue;
       }
 
       const result = await sql`
-        INSERT INTO markets (name, description, status)
+        INSERT INTO markets (name, description, status) 
         VALUES (${market.name}, ${market.description}, 'draft')
         RETURNING id
       `;
-      const marketId = result.rows[0].id;
+      const marketId = (result[0] as { id: number }).id;
       marketsCreated++;
       console.log(`Created market: ${market.name} (ID: ${marketId})`);
 
       for (let i = 0; i < market.outcomes.length; i++) {
         await sql`
-          INSERT INTO outcomes (market_id, name, display_order)
+          INSERT INTO outcomes (market_id, name, display_order) 
           VALUES (${marketId}, ${market.outcomes[i]}, ${i})
         `;
         outcomesCreated++;

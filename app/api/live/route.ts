@@ -19,14 +19,14 @@ export async function GET() {
     const marketsResult = await sql`
       SELECT * FROM markets WHERE status = 'open' ORDER BY created_at DESC
     `;
-    const markets = marketsResult.rows as Market[];
+    const markets = marketsResult as Market[];
 
     const marketsWithPrices = [];
     for (const market of markets) {
       const outcomesResult = await sql`
         SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
       `;
-      const outcomes = outcomesResult.rows as Outcome[];
+      const outcomes = outcomesResult as Outcome[];
 
       const shares = outcomes.map((o) => Number(o.shares_outstanding));
       const prices = calculatePrices(shares, Number(market.liquidity_param));
@@ -44,7 +44,7 @@ export async function GET() {
 
     // Get leaderboard (top 10 by total portfolio value)
     const usersResult = await sql`SELECT * FROM users ORDER BY balance DESC`;
-    const users = usersResult.rows as User[];
+    const users = usersResult as User[];
 
     const leaderboard: LeaderboardEntry[] = [];
 
@@ -56,18 +56,18 @@ export async function GET() {
         JOIN outcomes o ON p.outcome_id = o.id
         WHERE p.user_id = ${user.id} AND p.shares > 0
       `;
-      const positions = positionsResult.rows as (Position & { market_id: number; shares_outstanding: number })[];
+      const positions = positionsResult as (Position & { market_id: number; shares_outstanding: number })[];
 
       let positionValue = 0;
       for (const pos of positions) {
         const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
-        const market = marketResult.rows[0] as Market;
+        const market = marketResult[0] as Market;
         if (market.status !== "open") continue;
 
         const outcomesResult = await sql`
           SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
         `;
-        const outcomes = outcomesResult.rows as Outcome[];
+        const outcomes = outcomesResult as Outcome[];
 
         const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
         const prices = calculatePrices(sharesArray, Number(market.liquidity_param));

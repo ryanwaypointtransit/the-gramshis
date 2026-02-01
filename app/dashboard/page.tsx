@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     WHERE p.user_id = ${user.id} AND p.shares > 0
     ORDER BY m.status = 'open' DESC, m.created_at DESC
   `;
-  const rawPositions = rawPositionsResult.rows as (Position & {
+  const rawPositions = rawPositionsResult as (Position & {
     outcome_name: string;
     market_id: number;
     market_name: string;
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${p.market_id} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     const shares = outcomes.map((o) => Number(o.shares_outstanding));
     const prices = calculatePrices(shares, Number(p.liquidity_param));
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
     ORDER BY t.created_at DESC
     LIMIT 10
   `;
-  const transactions = transactionsResult.rows as (Position & {
+  const transactions = transactionsResult as (Position & {
     type: string;
     price_per_share: number;
     total_cost: number;

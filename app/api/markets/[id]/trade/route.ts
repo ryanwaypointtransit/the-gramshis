@@ -22,7 +22,7 @@ export async function POST(
     }
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -35,7 +35,7 @@ export async function POST(
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     const outcomeIndex = outcomes.findIndex((o) => o.id === outcomeId);
     if (outcomeIndex === -1) {
@@ -44,13 +44,13 @@ export async function POST(
 
     // Get fresh user balance
     const freshUserResult = await sql`SELECT * FROM users WHERE id = ${user.id}`;
-    const freshUser = freshUserResult.rows[0] as User;
+    const freshUser = freshUserResult[0] as User;
 
     // Get user's current position
     const positionResult = await sql`
       SELECT * FROM positions WHERE user_id = ${user.id} AND outcome_id = ${outcomeId}
     `;
-    const position = positionResult.rows[0] as Position | undefined;
+    const position = positionResult[0] as Position | undefined;
 
     const userShares = position ? Number(position.shares) : 0;
     const currentShares = outcomes.map((o) => Number(o.shares_outstanding));
@@ -118,7 +118,7 @@ export async function POST(
     const updatedOutcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
     `;
-    const updatedOutcomes = updatedOutcomesResult.rows as Outcome[];
+    const updatedOutcomes = updatedOutcomesResult as Outcome[];
     const newSharesArray = updatedOutcomes.map((o) => Number(o.shares_outstanding));
     const newPrices = calculatePrices(newSharesArray, liquidityParam);
 

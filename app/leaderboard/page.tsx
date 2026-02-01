@@ -25,7 +25,7 @@ export default async function LeaderboardPage() {
   }
 
   const usersResult = await sql`SELECT * FROM users`;
-  const users = usersResult.rows as User[];
+  const users = usersResult as User[];
 
   const leaderboard: LeaderboardEntry[] = [];
 
@@ -37,19 +37,19 @@ export default async function LeaderboardPage() {
       JOIN outcomes o ON p.outcome_id = o.id
       WHERE p.user_id = ${u.id} AND p.shares > 0
     `;
-    const positions = positionsResult.rows as (Position & { market_id: number })[];
+    const positions = positionsResult as (Position & { market_id: number })[];
 
     let positionValue = 0;
 
     for (const pos of positions) {
       const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
-      const market = marketResult.rows[0] as Market;
+      const market = marketResult[0] as Market;
       if (market.status !== "open" && market.status !== "paused") continue;
 
       const outcomesResult = await sql`
         SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
       `;
-      const outcomes = outcomesResult.rows as Outcome[];
+      const outcomes = outcomesResult as Outcome[];
 
       const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
       const prices = calculatePrices(sharesArray, Number(market.liquidity_param));

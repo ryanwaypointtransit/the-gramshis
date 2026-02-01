@@ -20,7 +20,7 @@ export async function PATCH(
     }
 
     const userResult = await sql`SELECT * FROM users WHERE id = ${userId}`;
-    const user = userResult.rows[0] as User | undefined;
+    const user = userResult[0] as User | undefined;
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

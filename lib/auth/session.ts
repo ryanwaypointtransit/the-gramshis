@@ -70,7 +70,7 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 
   const result = await sql`SELECT * FROM users WHERE id = ${session.userId}`;
-  return (result.rows[0] as User) || null;
+  return (result[0] as User) || null;
 }
 
 export async function requireAuth(): Promise<User> {
@@ -99,7 +99,7 @@ export async function getOrCreateUser(name: string, displayName?: string): Promi
 
   // Try to find existing user
   const existingResult = await sql`SELECT * FROM users WHERE name = ${normalizedName}`;
-  let user = existingResult.rows[0] as User | undefined;
+  let user = existingResult[0] as User | undefined;
 
   if (!user) {
     // Create new user
@@ -109,7 +109,7 @@ export async function getOrCreateUser(name: string, displayName?: string): Promi
       VALUES (${normalizedName}, ${display}, ${isAdmin})
       RETURNING *
     `;
-    user = insertResult.rows[0] as User;
+    user = insertResult[0] as User;
   }
 
   return user;

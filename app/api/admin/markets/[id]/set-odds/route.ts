@@ -22,7 +22,7 @@ export async function POST(
     }
 
     const marketResult = await sql`SELECT * FROM markets WHERE id = ${marketId}`;
-    const market = marketResult.rows[0] as Market | undefined;
+    const market = marketResult[0] as Market | undefined;
 
     if (!market) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -38,7 +38,7 @@ export async function POST(
     const outcomesResult = await sql`
       SELECT * FROM outcomes WHERE market_id = ${marketId} ORDER BY display_order
     `;
-    const outcomes = outcomesResult.rows as Outcome[];
+    const outcomes = outcomesResult as Outcome[];
 
     if (odds.length !== outcomes.length) {
       return NextResponse.json(

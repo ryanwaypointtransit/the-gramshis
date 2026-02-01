@@ -1,9 +1,37 @@
-import { sql } from "@vercel/postgres";
+import { neon } from "@neondatabase/serverless";
+
+// Create a function that returns the neon query function
+// This avoids errors at build time when DATABASE_URL is not set
+export function getDb() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL environment variable is not set");
+  }
+  return neon(databaseUrl);
+}
+
+// For convenience, export sql as an alias that creates the connection on first use
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _cachedSql: any = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function sql(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any[]> {
+  if (!_cachedSql) {
+    _cachedSql = getDb();
+  }
+  const result = await _cachedSql(strings, ...values);
+  return result;
+}
 
 // Initialize the database schema
 export async function initDb() {
-  await sql`
-    -- Users table
+  const db = getDb();
+  
+  await db`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name TEXT UNIQUE NOT NULL,
@@ -14,8 +42,7 @@ export async function initDb() {
     )
   `;
 
-  await sql`
-    -- Markets table
+  await db`
     CREATE TABLE IF NOT EXISTS markets (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -28,8 +55,7 @@ export async function initDb() {
     )
   `;
 
-  await sql`
-    -- Outcomes table
+  await db`
     CREATE TABLE IF NOT EXISTS outcomes (
       id SERIAL PRIMARY KEY,
       market_id INTEGER NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
@@ -39,8 +65,7 @@ export async function initDb() {
     )
   `;
 
-  await sql`
-    -- Positions table (user holdings)
+  await db`
     CREATE TABLE IF NOT EXISTS positions (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -51,8 +76,7 @@ export async function initDb() {
     )
   `;
 
-  await sql`
-    -- Transactions table (trade history)
+  await db`
     CREATE TABLE IF NOT EXISTS transactions (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -67,8 +91,7 @@ export async function initDb() {
     )
   `;
 
-  await sql`
-    -- Admin logs table
+  await db`
     CREATE TABLE IF NOT EXISTS admin_logs (
       id SERIAL PRIMARY KEY,
       admin_user_id INTEGER NOT NULL,
@@ -81,11 +104,15 @@ export async function initDb() {
   `;
 
   // Create indexes
-  await sql`CREATE INDEX IF NOT EXISTS idx_outcomes_market ON outcomes(market_id)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_positions_outcome ON positions(outcome_id)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_transactions_outcome ON transactions(outcome_id)`;
+  try {
+    await db`CREATE INDEX IF NOT EXISTS idx_outcomes_market ON outcomes(market_id)`;
+    await db`CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id)`;
+    await db`CREATE INDEX IF NOT EXISTS idx_positions_outcome ON positions(outcome_id)`;
+    await db`CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)`;
+    await db`CREATE INDEX IF NOT EXISTS idx_transactions_outcome ON transactions(outcome_id)`;
+  } catch {
+    // Indexes might already exist
+  }
 }
 
 // Type definitions for database rows
@@ -137,6 +164,3 @@ export interface Transaction {
   balance_after: number;
   created_at: string;
 }
-
-// Re-export sql for use in other modules
-export { sql };

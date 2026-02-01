@@ -19,7 +19,7 @@ export async function GET() {
       END,
       created_at DESC
     `;
-    const markets = marketsResult.rows as Market[];
+    const markets = marketsResult as Market[];
 
     const marketsWithOutcomes: MarketWithOutcomes[] = [];
     
@@ -27,7 +27,7 @@ export async function GET() {
       const outcomesResult = await sql`
         SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
       `;
-      const outcomes = outcomesResult.rows as Outcome[];
+      const outcomes = outcomesResult as Outcome[];
 
       const shares = outcomes.map((o) => Number(o.shares_outstanding));
       const prices = calculatePrices(shares, Number(market.liquidity_param));
