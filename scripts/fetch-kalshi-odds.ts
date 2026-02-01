@@ -442,7 +442,7 @@ if (!KALSHI_API_KEY_ID) {
   console.log("\n");
 
   // Add discovered series to our list
-  const allSeries = [...new Set([...GRAMMY_SERIES, ...discoveredSeries])];
+  const allSeries = Array.from(new Set([...GRAMMY_SERIES, ...discoveredSeries]));
 
   // Override the constant for this run
   (GRAMMY_SERIES as any).length = 0;

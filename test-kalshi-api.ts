@@ -2,7 +2,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-const KALSHI_API_KEY_ID = process.env.KALSHI_API_KEY_ID;
+const KALSHI_API_KEY_ID = process.env.KALSHI_API_KEY_ID || "";
 const KALSHI_PRIVATE_KEY_PATH = process.env.KALSHI_PRIVATE_KEY_PATH || "./Grammys.txt";
 const KALSHI_BASE_URL = "https://api.elections.kalshi.com/trade-api/v2";
 

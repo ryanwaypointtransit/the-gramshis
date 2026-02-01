@@ -190,7 +190,7 @@ export function selectMarket(
     }
     
     // Apply market-specific weight
-    weight *= MARKET_WEIGHTS[market.name] || 1;
+    weight *= (MARKET_WEIGHTS as Record<string, number>)[market.name] || 1;
     
     // Slightly reduce weight if bot already has positions in this market
     // to encourage diversification

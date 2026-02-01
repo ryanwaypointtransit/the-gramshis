@@ -7,7 +7,9 @@
  */
 
 import path from 'path';
-import { program } from 'commander';
+import { Command } from 'commander';
+
+const program = new Command();
 import { initialize, startSystem, stopSystem, getStatus, shutdown } from './orchestrator';
 
 // Set up CLI commands

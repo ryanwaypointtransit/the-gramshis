@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
 import { BOT_CONFIG } from './config';
-import { Bot, Market, BotEvent, BotBet, KalshiData } from './types';
+import { Bot, Market, Outcome, BotEvent, BotBet, KalshiData } from './types';
 import { formatTime, logBotAction } from './utils';
 import { initializeBots, generateBotBet, updateBotAfterBet } from './botEngine';
 import { calculateTradeCost, sharesForTargetPrices } from '../lib/market-maker/lmsr';
@@ -408,10 +408,13 @@ function executeBet(bet: BotBet) {
     const sharesData = sharesQuery.get(bet.marketId, bet.outcomeId) as { shares: number } | undefined;
     const currentShares = sharesData ? sharesData.shares : 0;
     
+    // Store db reference for use in transaction callback
+    const database = db;
+    
     // Execute the transaction using LMSR
-    db.transaction(() => {
+    database.transaction(() => {
       // Calculate actual cost using LMSR
-      const marketSharesQuery = db.prepare(`
+      const marketSharesQuery = database.prepare(`
         SELECT outcome_id, shares FROM market_maker
         WHERE market_id = ?
       `);
@@ -439,7 +442,7 @@ function executeBet(bet: BotBet) {
       const cost = calculateTradeCost(shareArray, outcomeIndex, bet.shares, LMSR_B);
       
       // Update market_maker table
-      const updateSharesQuery = db.prepare(`
+      const updateSharesQuery = database.prepare(`
         INSERT INTO market_maker (market_id, outcome_id, shares)
         VALUES (?, ?, ?)
         ON CONFLICT(market_id, outcome_id) DO UPDATE SET
@@ -449,14 +452,14 @@ function executeBet(bet: BotBet) {
       updateSharesQuery.run(bet.marketId, bet.outcomeId, bet.shares, bet.shares);
       
       // Update bot user balance
-      const updateBalanceQuery = db.prepare(`
+      const updateBalanceQuery = database.prepare(`
         UPDATE users SET balance = balance - ? WHERE id = ?
       `);
       
       updateBalanceQuery.run(cost, user.id);
       
       // Add position record
-      const addPositionQuery = db.prepare(`
+      const addPositionQuery = database.prepare(`
         INSERT INTO positions (user_id, market_id, outcome_id, shares)
         VALUES (?, ?, ?, ?)
         ON CONFLICT(user_id, market_id, outcome_id) DO UPDATE SET
@@ -466,7 +469,7 @@ function executeBet(bet: BotBet) {
       addPositionQuery.run(user.id, bet.marketId, bet.outcomeId, bet.shares, bet.shares);
       
       // Add transaction record
-      const addTransactionQuery = db.prepare(`
+      const addTransactionQuery = database.prepare(`
         INSERT INTO transactions (user_id, market_id, outcome_id, shares, price, timestamp)
         VALUES (?, ?, ?, ?, ?, ?)
       `);
