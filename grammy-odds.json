@@ -1,0 +1,425 @@
+{
+  "Song of the Year": {
+    "name": "Song of the Year",
+    "outcomes": [
+      {
+        "name": "Golden [From \"KPop Demon Hunters\"]",
+        "probability": 0.8
+      },
+      {
+        "name": "luther",
+        "probability": 0.11
+      },
+      {
+        "name": "DtMF",
+        "probability": 0.05
+      },
+      {
+        "name": "WILDFLOWER",
+        "probability": 0.04
+      },
+      {
+        "name": "Abracadabra",
+        "probability": 0.03
+      },
+      {
+        "name": "Manchild",
+        "probability": 0.02
+      },
+      {
+        "name": "APT.",
+        "probability": 0.02
+      },
+      {
+        "name": "Anxiety",
+        "probability": 0.02
+      }
+    ]
+  },
+  "Best New Artist": {
+    "name": "Best New Artist",
+    "outcomes": [
+      {
+        "name": "Olivia Dean",
+        "probability": 0.74
+      },
+      {
+        "name": "Leon Thomas",
+        "probability": 0.15
+      },
+      {
+        "name": "Addison Rae",
+        "probability": 0.05
+      },
+      {
+        "name": "KATSEYE",
+        "probability": 0.04
+      },
+      {
+        "name": "Alex Warren",
+        "probability": 0.04
+      },
+      {
+        "name": "sombr",
+        "probability": 0.02
+      },
+      {
+        "name": "The Marias",
+        "probability": 0.01
+      },
+      {
+        "name": "Lola Young",
+        "probability": 0.01
+      }
+    ]
+  },
+  "Album of the Year": {
+    "name": "Album of the Year",
+    "outcomes": [
+      {
+        "name": "DeBÍ TiRAR MáS FOToS",
+        "probability": 0.68
+      },
+      {
+        "name": "MAYHEM",
+        "probability": 0.2
+      },
+      {
+        "name": "GNX",
+        "probability": 0.12
+      },
+      {
+        "name": "Let God Sort Em Out",
+        "probability": 0.07
+      },
+      {
+        "name": "Man's Best Friend",
+        "probability": 0.04
+      },
+      {
+        "name": "SWAG",
+        "probability": 0.02
+      },
+      {
+        "name": "CHROMAKOPIA",
+        "probability": 0.02
+      },
+      {
+        "name": "MUTT",
+        "probability": 0.01
+      }
+    ]
+  },
+  "Record of the Year": {
+    "name": "Record of the Year",
+    "outcomes": [
+      {
+        "name": "luther",
+        "probability": 0.5
+      },
+      {
+        "name": "APT.",
+        "probability": 0.21
+      },
+      {
+        "name": "Abracadabra",
+        "probability": 0.15
+      },
+      {
+        "name": "DtMF",
+        "probability": 0.09
+      },
+      {
+        "name": "WILDFLOWER",
+        "probability": 0.04
+      },
+      {
+        "name": "Manchild",
+        "probability": 0.03
+      },
+      {
+        "name": "The Subway",
+        "probability": 0.01
+      },
+      {
+        "name": "Anxiety",
+        "probability": 0.01
+      }
+    ]
+  },
+  "Best Pop Duo/Group Performance": {
+    "name": "Best Pop Duo/Group Performance",
+    "outcomes": [
+      {
+        "name": "Golden [From \"KPop Demon Hunters\"]",
+        "probability": 0.6
+      },
+      {
+        "name": "APT.",
+        "probability": 0.46
+      },
+      {
+        "name": "Gabriela",
+        "probability": 0.05
+      },
+      {
+        "name": "Defying Gravity",
+        "probability": 0.02
+      },
+      {
+        "name": "30 For 30",
+        "probability": 0.01
+      }
+    ]
+  },
+  "Best Pop Vocal Album": {
+    "name": "Best Pop Vocal Album",
+    "outcomes": [
+      {
+        "name": "MAYHEM",
+        "probability": 0.75
+      },
+      {
+        "name": "Man's Best Friend",
+        "probability": 0.23
+      },
+      {
+        "name": "I've Tried Everything But Therapy (Part 2)",
+        "probability": 0.06
+      },
+      {
+        "name": "Something Beautiful",
+        "probability": 0.04
+      },
+      {
+        "name": "SWAG",
+        "probability": 0.03
+      }
+    ]
+  },
+  "Best Rap Album": {
+    "name": "Best Rap Album",
+    "outcomes": [
+      {
+        "name": "GNX",
+        "probability": 0.7
+      },
+      {
+        "name": "Let God Sort Em Out",
+        "probability": 0.32
+      },
+      {
+        "name": "CHROMAKOPIA",
+        "probability": 0.05
+      },
+      {
+        "name": "God Does Like Ugly",
+        "probability": 0.02
+      },
+      {
+        "name": "GLORIOUS",
+        "probability": 0.01
+      }
+    ]
+  },
+  "Best Rap Song": {
+    "name": "Best Rap Song",
+    "outcomes": [
+      {
+        "name": "The Birds Don't Sing",
+        "probability": 0.51
+      },
+      {
+        "name": "tv off",
+        "probability": 0.35
+      },
+      {
+        "name": "Anxiety",
+        "probability": 0.1
+      },
+      {
+        "name": "Sticky",
+        "probability": 0.05
+      },
+      {
+        "name": "TGIF",
+        "probability": 0.02
+      }
+    ]
+  },
+  "Best Alternative Music Performance": {
+    "name": "Best Alternative Music Performance",
+    "outcomes": [
+      {
+        "name": "Parachute",
+        "probability": 0.54
+      },
+      {
+        "name": "mangetout",
+        "probability": 0.26
+      },
+      {
+        "name": "SEEIN' STARS",
+        "probability": 0.15
+      },
+      {
+        "name": "Alone",
+        "probability": 0.11
+      },
+      {
+        "name": "Everything Is Peaceful Love",
+        "probability": 0.08
+      }
+    ]
+  },
+  "Best Dance/Electronic Album": {
+    "name": "Best Dance/Electronic Album",
+    "outcomes": [
+      {
+        "name": "EUSEXUA",
+        "probability": 0.37
+      },
+      {
+        "name": "Fancy That",
+        "probability": 0.27
+      },
+      {
+        "name": "F*** U SKRILLEX YOU THINK UR ANDY WARHOL BUT UR NOT!! <3",
+        "probability": 0.17
+      },
+      {
+        "name": "Ten Days",
+        "probability": 0.15
+      },
+      {
+        "name": "Inhale / Exhale",
+        "probability": 0.09
+      }
+    ]
+  },
+  "Best Dance/Electronic Recording": {
+    "name": "Best Dance/Electronic Recording",
+    "outcomes": [
+      {
+        "name": "Victory Lap",
+        "probability": 0.78
+      },
+      {
+        "name": "VOLTAGE",
+        "probability": 0.18
+      },
+      {
+        "name": "SPACE INVADER",
+        "probability": 0.07
+      },
+      {
+        "name": "No Cap",
+        "probability": 0.07
+      },
+      {
+        "name": "End Of Summer",
+        "probability": 0.03
+      }
+    ]
+  },
+  "Best Dance Pop Recording": {
+    "name": "Best Dance Pop Recording",
+    "outcomes": [
+      {
+        "name": "Abracadabra",
+        "probability": 0.85
+      },
+      {
+        "name": "Midnight Sun",
+        "probability": 0.13
+      },
+      {
+        "name": "Bluest Flame",
+        "probability": 0.04
+      },
+      {
+        "name": "Just Keep Watching (From F1® The Movie)",
+        "probability": 0.02
+      },
+      {
+        "name": "Illegal",
+        "probability": 0.02
+      }
+    ]
+  },
+  "Best Country Solo Performance": {
+    "name": "Best Country Solo Performance",
+    "outcomes": [
+      {
+        "name": "Somewhere Over Laredo",
+        "probability": 0.42
+      },
+      {
+        "name": "I Never Lie",
+        "probability": 0.24
+      },
+      {
+        "name": "Nose On The Grindstone",
+        "probability": 0.13
+      },
+      {
+        "name": "Bad As I Used To Be [From \"F1® The Movie\"]",
+        "probability": 0.13
+      },
+      {
+        "name": "Good News",
+        "probability": 0.03
+      }
+    ]
+  },
+  "Best Contemporary Country Album": {
+    "name": "Best Contemporary Country Album",
+    "outcomes": [
+      {
+        "name": "Snipe Hunter",
+        "probability": 0.37
+      },
+      {
+        "name": "Patterns",
+        "probability": 0.33
+      },
+      {
+        "name": "Beautifully Broken",
+        "probability": 0.15
+      },
+      {
+        "name": "Postcards From Texas",
+        "probability": 0.05
+      },
+      {
+        "name": "Evangeline Vs. The Machine",
+        "probability": 0.05
+      }
+    ]
+  },
+  "Best Remixed Recording": {
+    "name": "Best Remixed Recording",
+    "outcomes": [
+      {
+        "name": "Abracadabra (Gesaffelstein Remix)",
+        "probability": 0.47
+      },
+      {
+        "name": "Golden - David Guetta REM/X",
+        "probability": 0.31
+      },
+      {
+        "name": "Don't Forget About Us",
+        "probability": 0.09
+      },
+      {
+        "name": "Galvanize",
+        "probability": 0.07
+      },
+      {
+        "name": "A Dreams A Dream - Ron Trent Remix",
+        "probability": 0.06
+      }
+    ]
+  }
+}
