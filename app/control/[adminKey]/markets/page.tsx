@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useAdminFetch } from "../layout";
+import { useAdminFetch } from "../AdminContext";
 import NavBar from "@/components/NavBar";
 
 // The 15 Grammy markets we're using (with Kalshi odds available)

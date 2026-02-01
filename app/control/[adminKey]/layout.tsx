@@ -1,31 +1,9 @@
 "use client";
 
-import { useParams, redirect, notFound } from "next/navigation";
-import { createContext, useContext, ReactNode } from "react";
+import { useParams, notFound } from "next/navigation";
+import { AdminKeyProvider } from "./AdminContext";
 
-// Admin context to share the admin key with child components
-const AdminKeyContext = createContext<string>("");
-
-export function useAdminKey() {
-  return useContext(AdminKeyContext);
-}
-
-// Helper function to make authenticated admin fetch calls
-export function useAdminFetch() {
-  const adminKey = useAdminKey();
-  
-  return async (url: string, options: RequestInit = {}) => {
-    const headers = new Headers(options.headers);
-    headers.set("x-admin-key", adminKey);
-    
-    return fetch(url, {
-      ...options,
-      headers,
-    });
-  };
-}
-
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const adminKey = params.adminKey as string;
   
@@ -38,8 +16,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
   
   return (
-    <AdminKeyContext.Provider value={adminKey}>
+    <AdminKeyProvider adminKey={adminKey}>
       {children}
-    </AdminKeyContext.Provider>
+    </AdminKeyProvider>
   );
 }

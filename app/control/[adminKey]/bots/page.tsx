@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAdminFetch } from '../layout';
+import { useAdminFetch } from '../AdminContext';
 
 /**
  * Admin interface for controlling the Grammy betting bots

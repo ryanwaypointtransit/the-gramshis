@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useAdminFetch } from "../layout";
+import { useAdminFetch } from "../AdminContext";
 
 interface User {
   id: number;

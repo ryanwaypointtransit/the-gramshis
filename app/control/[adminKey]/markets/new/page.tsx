@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { useAdminFetch } from "../../layout";
+import { useAdminFetch } from "../../AdminContext";
 
 export default function NewMarketPage() {
   const router = useRouter();
