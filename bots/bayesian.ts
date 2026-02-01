@@ -19,7 +19,7 @@ import { calculateTimeBasedWeights, weightedRandomSelect } from './utils';
  */
 export function initializeBeliefs(bot: Bot, markets: Market[]): Bot {
   const beliefs: { [marketId: number]: { [outcomeId: number]: number } } = {};
-  const personality = BOT_PERSONALITIES[bot.name];
+  const personality = BOT_PERSONALITIES[bot.name as keyof typeof BOT_PERSONALITIES];
   
   // For each market, initialize beliefs
   for (const market of markets) {
@@ -89,7 +89,7 @@ export function updateBeliefs(
   const weights = calculateTimeBasedWeights(startTime, currentTime);
   
   // Get bot's learning rate from personality
-  const learningRate = BOT_PERSONALITIES[bot.name]?.learningRate || 0.7;
+  const learningRate = BOT_PERSONALITIES[bot.name as keyof typeof BOT_PERSONALITIES]?.learningRate || 0.7;
   
   // For each market, update beliefs
   for (const market of markets) {
@@ -169,7 +169,7 @@ export function selectMarket(
   currentTime: number
 ): Market | null {
   // Get bot personality
-  const personality = BOT_PERSONALITIES[bot.name];
+  const personality = BOT_PERSONALITIES[bot.name as keyof typeof BOT_PERSONALITIES];
   
   // Filter for open markets only
   const openMarkets = markets.filter(m => m.status === 'open');

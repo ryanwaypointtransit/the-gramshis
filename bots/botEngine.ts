@@ -29,7 +29,7 @@ export function createBot(name: string): Bot {
     name,
     username: `${BOT_CONFIG.BOT_USER_PREFIX}${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
     balance: BOT_CONFIG.STARTING_BALANCE,
-    personality: BOT_PERSONALITIES[name] || {
+    personality: BOT_PERSONALITIES[name as keyof typeof BOT_PERSONALITIES] || {
       description: "Generic bot personality",
       marketPreferences: ["major"],
       riskTolerance: 0.5,
@@ -64,8 +64,8 @@ export function shouldWithdraw(bot: Bot): boolean {
   
   // Withdraw probability is influenced by personality's risk tolerance
   // More risk-tolerant bots are less likely to withdraw
-  const personality = BOT_PERSONALITIES[bot.name];
-  const adjustedProbability = BOT_CONFIG.WITHDRAW_PROBABILITY * (1 - (personality.riskTolerance * 0.5));
+  const personality = BOT_PERSONALITIES[bot.name as keyof typeof BOT_PERSONALITIES];
+  const adjustedProbability = BOT_CONFIG.WITHDRAW_PROBABILITY * (1 - ((personality?.riskTolerance ?? 0.5) * 0.5));
   
   return Math.random() < adjustedProbability;
 }
