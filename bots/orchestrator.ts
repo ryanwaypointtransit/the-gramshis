@@ -18,8 +18,21 @@ let markets: Market[] = [];
 let kalshiData: KalshiData = {};
 let eventLoop: NodeJS.Timeout | null = null;
 
-// API base URL - use environment variable or default to localhost
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+// API base URL - use environment variable, Vercel URL, or default to localhost
+function getApiBaseUrl(): string {
+  if (process.env.API_BASE_URL) {
+    return process.env.API_BASE_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface BotStatus {
   isRunning: boolean;
@@ -68,6 +81,7 @@ function loadKalshiData(): KalshiData {
  */
 async function fetchMarkets(): Promise<Market[]> {
   try {
+    console.log(`Fetching markets from: ${API_BASE_URL}/api/markets`);
     const response = await fetch(`${API_BASE_URL}/api/markets`);
     if (!response.ok) {
       throw new Error(`Failed to fetch markets: ${response.status}`);
@@ -81,6 +95,7 @@ async function fetchMarkets(): Promise<Market[]> {
       outcomes: m.outcomes || []
     }));
     
+    console.log(`Fetched ${fetchedMarkets.length} markets`);
     return fetchedMarkets;
   } catch (error) {
     console.error('Failed to fetch markets:', error);
