@@ -9,20 +9,48 @@ interface MarketSeed {
 }
 
 // 2026 Grammy Awards (68th Annual) - February 1, 2026
-// Final 15 Grammy categories we are using based on Kalshi availability
+// 9 Grammy categories for The Gramshis prediction market
 const markets: MarketSeed[] = [
   {
-    name: "Song Of The Year",
+    name: "Album of the Year",
+    description: "Awarded for the overall production of an album",
+    outcomes: [
+      "DeBÍ TiRAR MáS FOToS - Bad Bunny",
+      "MAYHEM - Lady Gaga",
+      "GNX - Kendrick Lamar",
+      "Let God Sort Em Out - Clipse",
+      "Man's Best Friend - Sabrina Carpenter",
+      "SWAG - Justin Bieber",
+      "CHROMAKOPIA - Tyler, The Creator",
+      "MUTT - Leon Thomas",
+    ],
+  },
+  {
+    name: "Record of the Year",
+    description: "Awarded for the overall production of a single song",
+    outcomes: [
+      "luther - Kendrick Lamar & SZA",
+      "APT. - ROSÉ & Bruno Mars",
+      "Abracadabra - Lady Gaga",
+      "DtMF - Bad Bunny",
+      "WILDFLOWER - Billie Eilish",
+      "Manchild - Sabrina Carpenter",
+      "The Subway - Chappell Roan",
+      "Anxiety - Doechii",
+    ],
+  },
+  {
+    name: "Song of the Year",
     description: "Awarded to the songwriter(s) of the best song of the year",
     outcomes: [
-      "Abracadabra - Lady Gaga",
-      "Anxiety - Doechii",
-      "APT. - ROSÉ & Bruno Mars",
-      "DtMF - Bad Bunny",
       "Golden - HUNTR/X",
       "luther - Kendrick Lamar & SZA",
-      "Manchild - Sabrina Carpenter",
+      "DtMF - Bad Bunny",
       "WILDFLOWER - Billie Eilish",
+      "Abracadabra - Lady Gaga",
+      "Manchild - Sabrina Carpenter",
+      "APT. - ROSÉ & Bruno Mars",
+      "Anxiety - Doechii",
     ],
   },
   {
@@ -30,162 +58,69 @@ const markets: MarketSeed[] = [
     description: "Awarded to the best new artist who releases their first recording",
     outcomes: [
       "Olivia Dean",
-      "KATSEYE",
-      "The Marias",
-      "Addison Rae",
-      "sombr",
       "Leon Thomas",
+      "Addison Rae",
+      "KATSEYE",
       "Alex Warren",
+      "sombr",
+      "The Marias",
       "Lola Young",
-    ],
-  },
-  {
-    name: "Album Of The Year",
-    description: "Awarded for the overall production of an album",
-    outcomes: [
-      "DeBÍ TiRAR MáS FOToS - Bad Bunny",
-      "SWAG - Justin Bieber",
-      "Man's Best Friend - Sabrina Carpenter",
-      "Let God Sort Em Out - Clipse",
-      "MAYHEM - Lady Gaga",
-      "GNX - Kendrick Lamar",
-      "MUTT - Leon Thomas",
-      "CHROMAKOPIA - Tyler, The Creator",
-    ],
-  },
-  {
-    name: "Record Of The Year",
-    description: "Awarded for the overall production of a single song",
-    outcomes: [
-      "DtMF - Bad Bunny",
-      "Manchild - Sabrina Carpenter",
-      "Anxiety - Doechii",
-      "WILDFLOWER - Billie Eilish",
-      "Abracadabra - Lady Gaga",
-      "luther - Kendrick Lamar & SZA",
-      "The Subway - Chappell Roan",
-      "APT. - ROSÉ & Bruno Mars",
     ],
   },
   {
     name: "Best Rap Album",
     description: "Awarded to the best rap album of the year",
     outcomes: [
-      "Let God Sort Em Out - Clipse",
-      "GLORIOUS - GloRilla",
-      "God Does Like Ugly - JID",
       "GNX - Kendrick Lamar",
+      "Let God Sort Em Out - Clipse",
       "CHROMAKOPIA - Tyler, The Creator",
+      "God Does Like Ugly - JID",
+      "GLORIOUS - GloRilla",
     ],
   },
   {
-    name: "Best Pop Duo/Group Performance",
-    description: "Awarded to the best pop collaboration",
+    name: "Best Música Urbana Album",
+    description: "Awarded to the best Latin urban music album",
     outcomes: [
-      "Defying Gravity - Cynthia Erivo & Ariana Grande",
-      "Golden - HUNTR/X",
-      "Gabriela - KATSEYE",
-      "APT. - ROSÉ & Bruno Mars",
-      "30 For 30 - SZA feat. Kendrick Lamar",
+      "DeBÍ TiRAR MáS FOToS - Bad Bunny",
+      "Mixteip - J Balvin",
+      "FERXXO Vol X: Sagrado - Feid",
+      "NAIKI - Nicki Nicole",
+      "EUB Deluxe - Trueno",
+      "SINFÓNICO (En Vivo) - Yandel",
+    ],
+  },
+  {
+    name: "Best Contemporary Country Album",
+    description: "Awarded to the best contemporary country album",
+    outcomes: [
+      "Snipe Hunter - Zach Bryan",
+      "Patterns - Jordan Davis",
+      "Beautifully Broken - Jelly Roll",
+      "Postcards From Texas - Flatland Cavalry",
+      "Evangeline Vs. The Machine - Sierra Ferrell",
     ],
   },
   {
     name: "Best Pop Vocal Album",
     description: "Awarded to the best pop vocal album",
     outcomes: [
-      "SWAG - Justin Bieber",
-      "Man's Best Friend - Sabrina Carpenter",
-      "Something Beautiful - Miley Cyrus",
       "MAYHEM - Lady Gaga",
-      "I've Tried Everything But Therapy Part 2 - Teddy Swims",
+      "Man's Best Friend - Sabrina Carpenter",
+      "I've Tried Everything But Therapy (Part 2) - Teddy Swims",
+      "Something Beautiful - Miley Cyrus",
+      "SWAG - Justin Bieber",
     ],
   },
   {
     name: "Best Pop Solo Performance",
     description: "Awarded to the best pop solo performance",
     outcomes: [
-      "DAISIES - Justin Bieber",
+      "Daisies - Justin Bieber",
       "Manchild - Sabrina Carpenter",
       "Disease - Lady Gaga",
       "The Subway - Chappell Roan",
       "Messy - Lola Young",
-    ],
-  },
-  {
-    name: "Best Rap Song",
-    description: "Awarded to the songwriter(s) of the best rap song",
-    outcomes: [
-      "Anxiety - Doechii",
-      "The Birds Don't Sing - Clipse, John Legend & Voices of Fire",
-      "Sticky - Tyler, The Creator, GloRilla, Sexyy Red & Lil Wayne",
-      "TGIF - GloRilla",
-      "tv off - Kendrick Lamar & Lefty Gunplay",
-    ],
-  },
-  {
-    name: "Best Rap Performance",
-    description: "Awarded to the best rap performance",
-    outcomes: [
-      "Outside - Cardi B",
-      "Chains & Whips - Clipse, Pharrell Williams & Kendrick Lamar",
-      "Anxiety - Doechii",
-      "tv off - Kendrick Lamar & Lefty Gunplay",
-      "Darling, I - Tyler, The Creator & Teezo Touchdown",
-    ],
-  },
-  {
-    name: "Best R&B Song",
-    description: "Awarded to the songwriter(s) of the best R&B song",
-    outcomes: [
-      "Folded - Kehlani",
-      "Heart Of A Woman - Summer Walker",
-      "It Depends - Chris Brown & Bryson Tiller",
-      "Overqualified - Durand Bernarr",
-      "YES IT IS - Leon Thomas",
-    ],
-  },
-  {
-    name: "Best Rock Performance",
-    description: "Awarded to the best rock performance",
-    outcomes: [
-      "U Should Not Be Doing That - Amyl and The Sniffers",
-      "The Emptiness Machine - Linkin Park",
-      "NEVER ENOUGH - Turnstile",
-      "Mirtazapine - Hayley Williams",
-      "Changes (Live From Villa Park) - YUNGBLUD feat. Nuno Bettencourt",
-    ],
-  },
-  {
-    name: "Best Alternative Music Album",
-    description: "Awarded to the best alternative music album",
-    outcomes: [
-      "SABLE, fABLE - Bon Iver",
-      "Songs Of A Lost World - The Cure",
-      "DON'T TAP THE GLASS - Tyler, The Creator",
-      "moisturizer - Wet Leg",
-      "Ego Death At A Bachelorette Party - Hayley Williams",
-    ],
-  },
-  {
-    name: "Best Rock Song",
-    description: "Awarded to the songwriter(s) of the best rock song",
-    outcomes: [
-      "As Alive As You Need Me To Be - Trent Reznor & Atticus Ross",
-      "Caramel - Vessel & II",
-      "Glum - Daniel James & Hayley Williams",
-      "NEVER ENOUGH - Turnstile",
-      "Zombie - YUNGBLUD",
-    ],
-  },
-  {
-    name: "Best Remixed Recording",
-    description: "Awarded to the best remixed recording",
-    outcomes: [
-      "Abracadabra (Gesaffelstein Remix) - Lady Gaga",
-      "Don't Forget About Us (KAYTRANADA Remix) - Mariah Carey",
-      "A Dreams A Dream (Ron Trent Remix) - Soul II Soul",
-      "Galvanize (Chris Lake Remix) - The Chemical Brothers",
-      "Golden (David Guetta Remix) - HUNTR/X",
     ],
   },
 ];
@@ -279,6 +214,19 @@ async function initSchema() {
   console.log("Schema initialized!\n");
 }
 
+async function clearMarkets() {
+  console.log("Clearing existing markets...\n");
+  
+  // Delete in order due to foreign key constraints
+  await sql`DELETE FROM transactions WHERE outcome_id IN (SELECT id FROM outcomes)`;
+  await sql`DELETE FROM positions WHERE outcome_id IN (SELECT id FROM outcomes)`;
+  await sql`DELETE FROM admin_logs WHERE target_type = 'market'`;
+  await sql`DELETE FROM outcomes`;
+  await sql`DELETE FROM markets`;
+  
+  console.log("Existing markets cleared!\n");
+}
+
 async function seedMarkets() {
   console.log("Starting market seed...\n");
 
@@ -287,13 +235,6 @@ async function seedMarkets() {
 
   for (const market of markets) {
     try {
-      // Check if market already exists
-      const existing = await sql`SELECT id FROM markets WHERE name = ${market.name}`;
-      if (existing.length > 0) {
-        console.log(`Market already exists: ${market.name} (skipping)`);
-        continue;
-      }
-
       const result = await sql`
         INSERT INTO markets (name, description, status) 
         VALUES (${market.name}, ${market.description}, 'draft')
@@ -329,6 +270,7 @@ async function seedMarkets() {
 async function main() {
   try {
     await initSchema();
+    await clearMarkets();
     await seedMarkets();
     console.log("\nDone!");
     process.exit(0);
