@@ -18,6 +18,8 @@ export default function AdminPage() {
   });
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -53,6 +55,34 @@ export default function AdminPage() {
     
     loadData();
   }, [adminFetch]);
+
+  const handleReset = async (action: string, confirmMessage: string) => {
+    if (!confirm(confirmMessage)) return;
+    
+    setResetting(true);
+    setResetMessage("");
+    
+    try {
+      const res = await adminFetch("/api/admin/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setResetMessage(data.message);
+        // Reload the page to refresh stats
+        window.location.reload();
+      } else {
+        setResetMessage(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      setResetMessage("Failed to perform reset");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -135,6 +165,46 @@ export default function AdminPage() {
             <Link href="/live-odds" className="btn-secondary" target="_blank">
               Open Live Display ↗
             </Link>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="card bg-red-50 border-red-200 mb-8">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Danger Zone</h2>
+          <p className="text-sm text-red-600 mb-4">
+            These actions are destructive and cannot be undone.
+          </p>
+          
+          {resetMessage && (
+            <div className={`p-3 rounded mb-4 ${resetMessage.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              {resetMessage}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => handleReset("reset-prices", "This will reset all market prices to equal odds. Continue?")}
+              disabled={resetting}
+              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
+            >
+              {resetting ? "Processing..." : "Reset Prices"}
+            </button>
+            
+            <button
+              onClick={() => handleReset("clear-users", "This will delete ALL users, positions, and transactions. Markets will remain but prices will reset. Continue?")}
+              disabled={resetting}
+              className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+            >
+              {resetting ? "Processing..." : "Clear All Users"}
+            </button>
+            
+            <button
+              onClick={() => handleReset("reset-all", "This will DELETE EVERYTHING and reseed fresh markets. All users, positions, and transactions will be lost. Are you absolutely sure?")}
+              disabled={resetting}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {resetting ? "Processing..." : "Full Reset (Reseed)"}
+            </button>
           </div>
         </div>
 
