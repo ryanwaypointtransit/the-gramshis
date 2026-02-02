@@ -1,0 +1,9 @@
+{"location":"cli.ts:23","message":"init command started","data":{"argv":["init"]},"timestamp":1769991187330,"sessionId":"debug-session","hypothesisId":"H3"}
+{"location":"cli.ts:30","message":"Calling initialize()","data":{},"timestamp":1769991187339,"sessionId":"debug-session","hypothesisId":"H1"}
+{"location":"orchestrator.ts:200","message":"initialize() called","data":{},"timestamp":1769991187339,"sessionId":"debug-session","hypothesisId":"H1"}
+{"location":"orchestrator.ts:38","message":"Loading bot names","data":{},"timestamp":1769991187340,"sessionId":"debug-session","hypothesisId":"H5"}
+{"location":"orchestrator.ts:52","message":"Bot names loaded","data":{"count":10,"names":["Khia-Asylum","connor_toups_burner","MichalSkrrrrrreta","Saif_Turkiye","DroneStrikeRyan","miguel(deCafe)","Dogin5C","XXXAdam_HargusXXX","catherine_ooOOOoo","HiSomeritsJonathonPlsReply2Mytxts"]},"timestamp":1769991187340,"sessionId":"debug-session","hypothesisId":"H5"}
+{"location":"orchestrator.ts:77","message":"Fetching markets from API","data":{"url":"http://localhost:3000/api/markets"},"timestamp":1769991187341,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"orchestrator.ts:95","message":"Markets fetched","data":{"count":9,"marketNames":["Best Pop Solo Performance","Best Pop Vocal Album","Best Contemporary Country Album","Best Música Urbana Album","Best Rap Album","Best New Artist","Song of the Year","Record of the Year","Album of the Year"]},"timestamp":1769991187803,"sessionId":"debug-session","hypothesisId":"H4"}
+{"location":"orchestrator.ts:243","message":"Initialization complete","data":{"botCount":10,"marketCount":9},"timestamp":1769991188328,"sessionId":"debug-session","hypothesisId":"H1"}
+{"location":"cli.ts:36","message":"initialize() returned","data":{"success":true},"timestamp":1769991188328,"sessionId":"debug-session","hypothesisId":"H1"}

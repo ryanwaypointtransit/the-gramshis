@@ -28,61 +28,43 @@ export const BOT_CONFIG = {
 
 // Weightings for choosing markets
 // Higher number = more likely to be chosen
-export const MARKET_WEIGHTS = {
-  "Song Of The Year": 10,
+export const MARKET_WEIGHTS: Record<string, number> = {
+  "Album of the Year": 10,
+  "Record of the Year": 10,
+  "Song of the Year": 10,
   "Best New Artist": 8,
-  "Album Of The Year": 10,
-  "Record Of The Year": 10,
-  "Best Pop Solo Performance": 7,
-  "Best Pop Duo/Group Performance": 7,
-  "Best Pop Vocal Album": 6,
   "Best Rap Album": 7,
-  "Best Rap Song": 6,
-  "Best Alternative Music Performance": 5,
-  "Best Dance/Electronic Album": 5,
-  "Best Dance/Electronic Recording": 5,
-  "Best Dance Pop Recording": 6,
-  "Best Country Solo Performance": 5,
-  "Best Contemporary Country Album": 4,
-  "Best Remixed Recording": 4
+  "Best Música Urbana Album": 6,
+  "Best Contemporary Country Album": 5,
+  "Best Pop Vocal Album": 6,
+  "Best Pop Solo Performance": 7
 };
 
 // Market categories for diversification
-export const MARKET_CATEGORIES = {
+export const MARKET_CATEGORIES: Record<string, string[]> = {
   "major": [
-    "Song Of The Year",
-    "Album Of The Year",
-    "Record Of The Year",
+    "Album of the Year",
+    "Record of the Year",
+    "Song of the Year",
     "Best New Artist"
   ],
   "pop": [
     "Best Pop Solo Performance",
-    "Best Pop Duo/Group Performance",
     "Best Pop Vocal Album"
   ],
   "rap": [
-    "Best Rap Album",
-    "Best Rap Song"
+    "Best Rap Album"
   ],
-  "alternative": [
-    "Best Alternative Music Performance"
-  ],
-  "electronic": [
-    "Best Dance/Electronic Album",
-    "Best Dance/Electronic Recording",
-    "Best Dance Pop Recording"
+  "latin": [
+    "Best Música Urbana Album"
   ],
   "country": [
-    "Best Country Solo Performance",
     "Best Contemporary Country Album"
-  ],
-  "other": [
-    "Best Remixed Recording"
   ]
 };
 
 // Bot personalities to influence betting strategies
-export const BOT_PERSONALITIES = {
+export const BOT_PERSONALITIES: Record<string, { description: string; marketPreferences: string[]; riskTolerance: number; learningRate: number }> = {
   "Khia-Asylum": {
     description: "Passionate music fan with strong opinions",
     marketPreferences: ["major", "rap"],
@@ -91,7 +73,7 @@ export const BOT_PERSONALITIES = {
   },
   "connor_toups_burner": {
     description: "Secretive bettor who makes unexpected moves",
-    marketPreferences: ["electronic", "alternative"],
+    marketPreferences: ["latin", "country"],
     riskTolerance: 0.6,
     learningRate: 0.5,
   },
@@ -103,25 +85,25 @@ export const BOT_PERSONALITIES = {
   },
   "Saif_Turkiye": {
     description: "International music enthusiast with diverse taste",
-    marketPreferences: ["major", "electronic"],
+    marketPreferences: ["major", "latin"],
     riskTolerance: 0.5,
     learningRate: 0.6,
   },
   "DroneStrikeRyan": {
     description: "Aggressive bettor who makes bold moves",
-    marketPreferences: ["major", "electronic"],
+    marketPreferences: ["major", "rap"],
     riskTolerance: 0.9,
     learningRate: 0.6,
   },
   "miguel(deCafe)": {
     description: "Calm, calculated bettor who watches market movements",
-    marketPreferences: ["pop", "other"],
+    marketPreferences: ["pop", "country"],
     riskTolerance: 0.4,
     learningRate: 0.9,
   },
   "Dogin5C": {
     description: "Chaotic bettor with unpredictable patterns",
-    marketPreferences: ["alternative", "rap"],
+    marketPreferences: ["latin", "rap"],
     riskTolerance: 0.8,
     learningRate: 0.4,
   },

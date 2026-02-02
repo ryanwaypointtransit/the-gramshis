@@ -3,8 +3,6 @@
  * 
  * This module provides the API for starting, stopping, and monitoring
  * the bot system from other parts of the application.
- * 
- * NOTE: Bot system is currently disabled during Postgres migration.
  */
 
 import { initialize, startSystem, stopSystem, getStatus, shutdown } from './orchestrator';
@@ -64,7 +62,7 @@ if (require.main === module) {
         process.exit(0);
       });
     } else {
-      console.error('Bot system is currently disabled during Postgres migration');
+      console.error('Bot system initialization failed. Make sure the server is running.');
       process.exit(1);
     }
   })();
