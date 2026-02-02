@@ -6,23 +6,17 @@ import { useParams } from "next/navigation";
 import { useAdminFetch } from "../AdminContext";
 import NavBar from "@/components/NavBar";
 
-// The 15 Grammy markets we're using
-const GRAMMY_MARKETS_15 = [
-  "Song of the Year",
-  "Best New Artist",
+// The 9 Grammy markets we're using
+const GRAMMY_MARKETS = [
   "Album of the Year",
   "Record of the Year",
-  "Best Pop Duo/Group Performance",
-  "Best Pop Vocal Album",
+  "Song of the Year",
+  "Best New Artist",
   "Best Rap Album",
-  "Best Rap Song",
-  "Best Alternative Music Performance",
-  "Best Dance/Electronic Album",
-  "Best Dance/Electronic Recording",
-  "Best Dance Pop Recording",
-  "Best Country Solo Performance",
+  "Best Música Urbana Album",
   "Best Contemporary Country Album",
-  "Best Remixed Recording",
+  "Best Pop Vocal Album",
+  "Best Pop Solo Performance",
 ];
 
 interface Market {
@@ -54,19 +48,19 @@ export default function AdminMarketsPage() {
         return;
       }
       
-      // Filter to only show the 15 Grammy markets
+      // Filter to only show the Grammy markets
       const filteredMarkets = (data.markets || []).filter((m: Market) =>
-        GRAMMY_MARKETS_15.some((name) => 
+        GRAMMY_MARKETS.some((name) => 
           m.name.toLowerCase() === name.toLowerCase()
         )
       );
       
-      // Sort by the order in GRAMMY_MARKETS_15
+      // Sort by the order in GRAMMY_MARKETS
       filteredMarkets.sort((a: Market, b: Market) => {
-        const indexA = GRAMMY_MARKETS_15.findIndex(
+        const indexA = GRAMMY_MARKETS.findIndex(
           (name) => name.toLowerCase() === a.name.toLowerCase()
         );
-        const indexB = GRAMMY_MARKETS_15.findIndex(
+        const indexB = GRAMMY_MARKETS.findIndex(
           (name) => name.toLowerCase() === b.name.toLowerCase()
         );
         return indexA - indexB;
@@ -181,7 +175,7 @@ export default function AdminMarketsPage() {
             ← Back to Admin
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">Manage Markets</h1>
-          <p className="text-sm text-gray-500">Control the 15 Grammy Award Categories</p>
+          <p className="text-sm text-gray-500">Control the 9 Grammy Award Categories</p>
         </div>
 
         {error && (
@@ -246,13 +240,13 @@ export default function AdminMarketsPage() {
 
         {/* Markets List */}
         <div className="card">
-          <h2 className="font-semibold text-gray-900 mb-4">All Markets ({markets.length}/15)</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">All Markets ({markets.length}/{GRAMMY_MARKETS.length})</h2>
           
           {markets.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-2">No markets found in database.</p>
               <p className="text-gray-400 text-sm">
-                Run the seed script to create markets: <code className="bg-gray-100 px-2 py-1 rounded">npx ts-node scripts/seed-markets.ts</code>
+                Run the seed script to create markets: <code className="bg-gray-100 px-2 py-1 rounded">npm run seed</code>
               </p>
             </div>
           ) : (
@@ -336,11 +330,11 @@ export default function AdminMarketsPage() {
           )}
         </div>
 
-        {markets.length > 0 && markets.length < 15 && (
+        {markets.length > 0 && markets.length < GRAMMY_MARKETS.length && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800 text-sm">
-              <strong>Missing {15 - markets.length} markets:</strong>{" "}
-              {GRAMMY_MARKETS_15.filter(
+              <strong>Missing {GRAMMY_MARKETS.length - markets.length} markets:</strong>{" "}
+              {GRAMMY_MARKETS.filter(
                 (name) => !markets.some((m) => m.name.toLowerCase() === name.toLowerCase())
               ).join(", ")}
             </p>
