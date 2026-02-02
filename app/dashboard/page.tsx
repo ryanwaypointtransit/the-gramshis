@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
   // Get user's positions with market details
   const rawPositionsResult = await sql`
-    SELECT p.*, o.name as outcome_name, o.market_id, m.name as market_name, m.status as market_status, m.liquidity_param
+    SELECT p.*, o.name as outcome_name, o.market_id, m.name as market_name, m.status as market_status, m.liquidity_param, m.winning_outcome_id
     FROM positions p
     JOIN outcomes o ON p.outcome_id = o.id
     JOIN markets m ON o.market_id = m.id
@@ -39,6 +39,7 @@ export default async function DashboardPage() {
     market_name: string;
     market_status: string;
     liquidity_param: number;
+    winning_outcome_id: number | null;
   })[];
 
   const positions: PositionWithDetails[] = [];
@@ -51,10 +52,24 @@ export default async function DashboardPage() {
     const shares = outcomes.map((o) => Number(o.shares_outstanding));
     const prices = calculatePrices(shares, Number(p.liquidity_param));
     const outcomeIndex = outcomes.findIndex((o) => o.id === p.outcome_id);
-    const currentPrice = prices[outcomeIndex] || 0;
-    const currentValue = Number(p.shares) * currentPrice;
     const costBasis = Number(p.shares) * Number(p.avg_cost_basis);
-    const profitLoss = currentValue - costBasis;
+    
+    let currentPrice: number;
+    let currentValue: number;
+    let profitLoss: number;
+
+    if (p.market_status === "resolved") {
+      // For resolved markets: winners get $1/share, losers get $0
+      const isWinner = p.outcome_id === p.winning_outcome_id;
+      currentPrice = isWinner ? 1.0 : 0;
+      currentValue = isWinner ? Number(p.shares) : 0;
+      profitLoss = currentValue - costBasis;
+    } else {
+      // For open/paused markets: use LMSR price
+      currentPrice = prices[outcomeIndex] || 0;
+      currentValue = Number(p.shares) * currentPrice;
+      profitLoss = currentValue - costBasis;
+    }
 
     positions.push({
       ...p,
@@ -70,13 +85,9 @@ export default async function DashboardPage() {
     });
   }
 
-  const totalPositionValue = positions
-    .filter((p) => p.marketStatus === "open" || p.marketStatus === "paused")
-    .reduce((sum, p) => sum + p.currentValue, 0);
-
-  const totalProfitLoss = positions
-    .filter((p) => p.marketStatus === "open" || p.marketStatus === "paused")
-    .reduce((sum, p) => sum + p.profitLoss, 0);
+  // For portfolio totals, include all positions (resolved ones now have correct values)
+  const totalPositionValue = positions.reduce((sum, p) => sum + p.currentValue, 0);
+  const totalProfitLoss = positions.reduce((sum, p) => sum + p.profitLoss, 0);
 
   // Get recent transactions
   const transactionsResult = await sql`

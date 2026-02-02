@@ -38,21 +38,31 @@ export async function GET() {
       for (const pos of positions) {
         const marketResult = await sql`SELECT * FROM markets WHERE id = ${pos.market_id}`;
         const market = marketResult[0] as Market;
-        if (market.status !== "open" && market.status !== "paused") continue;
 
-        const outcomesResult = await sql`
-          SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
-        `;
-        const outcomes = outcomesResult as Outcome[];
+        if (market.status === "resolved") {
+          // For resolved markets: winners get $1/share, losers get $0
+          if (pos.outcome_id === market.winning_outcome_id) {
+            positionValue += Number(pos.shares); // $1 per share
+            positionCount++;
+          }
+          // Losers get $0
+        } else if (market.status === "open" || market.status === "paused") {
+          // For active markets, use LMSR pricing
+          const outcomesResult = await sql`
+            SELECT * FROM outcomes WHERE market_id = ${market.id} ORDER BY display_order
+          `;
+          const outcomes = outcomesResult as Outcome[];
 
-        const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
-        const prices = calculatePrices(sharesArray, Number(market.liquidity_param));
+          const sharesArray = outcomes.map((o) => Number(o.shares_outstanding));
+          const prices = calculatePrices(sharesArray, Number(market.liquidity_param));
 
-        const outcomeIndex = outcomes.findIndex((o) => o.id === pos.outcome_id);
-        if (outcomeIndex !== -1) {
-          positionValue += Number(pos.shares) * prices[outcomeIndex];
-          positionCount++;
+          const outcomeIndex = outcomes.findIndex((o) => o.id === pos.outcome_id);
+          if (outcomeIndex !== -1) {
+            positionValue += Number(pos.shares) * prices[outcomeIndex];
+            positionCount++;
+          }
         }
+        // Draft markets are ignored
       }
 
       leaderboard.push({
