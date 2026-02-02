@@ -13,6 +13,11 @@ interface LeaderboardEntry {
   totalValue: number;
 }
 
+interface OutcomeBettor {
+  name: string;
+  shares: number;
+}
+
 export async function GET() {
   try {
     // Get all open markets with their outcomes and prices
@@ -31,14 +36,39 @@ export async function GET() {
       const shares = outcomes.map((o) => Number(o.shares_outstanding));
       const prices = calculatePrices(shares, Number(market.liquidity_param));
 
-      marketsWithPrices.push({
-        id: market.id,
-        name: market.name,
-        outcomes: outcomes.map((o, i) => ({
+      // Get positions for each outcome (who's betting on what)
+      const outcomesWithBettors = [];
+      for (let i = 0; i < outcomes.length; i++) {
+        const o = outcomes[i];
+        const positionsResult = await sql`
+          SELECT u.display_name as name, p.shares 
+          FROM positions p 
+          JOIN users u ON p.user_id = u.id 
+          WHERE p.outcome_id = ${o.id} AND p.shares > 0.01
+          ORDER BY p.shares DESC
+          LIMIT 5
+        `;
+        
+        outcomesWithBettors.push({
           id: o.id,
           name: o.name,
           price: prices[i],
-        })),
+          shares: Number(o.shares_outstanding),
+          bettors: positionsResult.map((p: any) => ({
+            name: p.name,
+            shares: Number(p.shares),
+          })),
+        });
+      }
+
+      // Calculate total shares in market
+      const totalShares = shares.reduce((a, b) => a + b, 0);
+
+      marketsWithPrices.push({
+        id: market.id,
+        name: market.name,
+        totalShares,
+        outcomes: outcomesWithBettors,
       });
     }
 
