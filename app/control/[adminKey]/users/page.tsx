@@ -125,7 +125,7 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-4 text-gray-900">{user.name}</td>
                   <td className="py-3 px-4 text-gray-900">{user.display_name}</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900">
-                    ${user.balance.toFixed(2)}
+                    ${Number(user.balance).toFixed(2)}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {user.is_admin === 1 && (
@@ -165,7 +165,7 @@ export default function AdminUsersPage() {
                     Current Balance
                   </label>
                   <p className="text-lg font-mono text-gray-900">
-                    ${users.find((u) => u.id === adjustUserId)?.balance.toFixed(2)}
+                    ${Number(users.find((u) => u.id === adjustUserId)?.balance || 0).toFixed(2)}
                   </p>
                 </div>
 

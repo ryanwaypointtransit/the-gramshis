@@ -8,6 +8,10 @@ interface MarketSeed {
   outcomes: string[];
 }
 
+// Initial liquidity for each outcome - prevents wild price swings from single trades
+// Each outcome starts with this many shares, making prices more stable
+const INITIAL_LIQUIDITY = 100;
+
 // 2026 Grammy Awards (68th Annual) - February 1, 2026
 // 9 Grammy categories for The Gramshis prediction market
 const markets: MarketSeed[] = [
@@ -215,16 +219,17 @@ async function initSchema() {
 }
 
 async function clearMarkets() {
-  console.log("Clearing existing markets...\n");
+  console.log("Clearing existing data...\n");
   
   // Delete in order due to foreign key constraints
-  await sql`DELETE FROM transactions WHERE outcome_id IN (SELECT id FROM outcomes)`;
-  await sql`DELETE FROM positions WHERE outcome_id IN (SELECT id FROM outcomes)`;
-  await sql`DELETE FROM admin_logs WHERE target_type = 'market'`;
+  await sql`DELETE FROM transactions`;
+  await sql`DELETE FROM positions`;
+  await sql`DELETE FROM admin_logs`;
   await sql`DELETE FROM outcomes`;
   await sql`DELETE FROM markets`;
+  await sql`DELETE FROM users`;  // Also clear users to remove old bot_ prefixed accounts
   
-  console.log("Existing markets cleared!\n");
+  console.log("Existing data cleared!\n");
 }
 
 async function seedMarkets() {
@@ -246,12 +251,12 @@ async function seedMarkets() {
 
       for (let i = 0; i < market.outcomes.length; i++) {
         await sql`
-          INSERT INTO outcomes (market_id, name, display_order) 
-          VALUES (${marketId}, ${market.outcomes[i]}, ${i})
+          INSERT INTO outcomes (market_id, name, display_order, shares_outstanding) 
+          VALUES (${marketId}, ${market.outcomes[i]}, ${i}, ${INITIAL_LIQUIDITY})
         `;
         outcomesCreated++;
       }
-      console.log(`  Added ${market.outcomes.length} nominees\n`);
+      console.log(`  Added ${market.outcomes.length} nominees (${INITIAL_LIQUIDITY} initial shares each)\n`);
     } catch (error) {
       console.error(`Error creating market "${market.name}":`, error);
     }

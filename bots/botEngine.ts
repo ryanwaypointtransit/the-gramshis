@@ -24,10 +24,12 @@ import {
  * @returns Initialized bot object
  */
 export function createBot(name: string): Bot {
+  // Use the name directly (cleaned up) without bot_ prefix
+  const cleanName = name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
   return {
-    id: `bot_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+    id: cleanName,
     name,
-    username: `${BOT_CONFIG.BOT_USER_PREFIX}${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+    username: cleanName,
     balance: BOT_CONFIG.STARTING_BALANCE,
     personality: BOT_PERSONALITIES[name as keyof typeof BOT_PERSONALITIES] || {
       description: "Generic bot personality",
